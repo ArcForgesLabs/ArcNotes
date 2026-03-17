@@ -1,0 +1,89 @@
+@PROJECT_NAME_LOWERCASE@ (@PROJECT_VERSION@) UNRELEASED; urgency=low
+
+  * No changelog is available yet
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  @DATE_NOW_UTC@
+
+@PROJECT_NAME_LOWERCASE@ (2.3.1) stable; urgency=low
+
+  * Fixed a visual bug where the "Hide to tray" option would not reflect its real state.
+  * Changed the strikethrough keyboard shortcut from Ctrl+S to Ctrl+Shift+X.
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Tue, 1 Oct 2024 11:00:00 +0000
+
+@PROJECT_NAME_LOWERCASE@ (2.3.0) stable; urgency=low
+
+  * Export or import your notes to and from .txt and .md files.
+  * The notes list now displays cleaner text by converting Markdown to plain text for improved readability
+  * Optimized the app’s startup time for quicker access
+  * Significantly improved the efficiency of loading notes in the list
+  * The app now checks for updates every hour (can be disabled)
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Wed, 31 Aug 2024 01:00:00 +0100
+
+@PROJECT_NAME_LOWERCASE@ (2.2.1) stable; urgency=low
+
+  * To sustain and further our commitment to exceptional app development, we have transitioned to a subscription-based pricing model for the Pro version
+  * Resolved a conflict within the Kanban interface: previously, editing a task would not conclude if a separate task was concurrently edited
+  * Addressed an issue where editing was mistakenly permitted within the editor while the Trash folder was active
+  * Fixed bug where icons didn't show up on some Linux distributions
+  * Corrected an inconsistency where icons were not displayed on certain Linux distributions
+  * Resolved display issues of specific windows on Ubuntu 23.04
+  * Addressed an issue with the Editor Settings window failing to appear on Qt 5.12.2
+  * For Pro users, the 'Pro' label within the Editor Settings has been made redundant and is now removed for a cleaner interface
+  * Note: Anyone can still access all Pro features at no cost by building the app from source
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Wed, 30 Aug 2023 01:00:00 +0100
+
+@PROJECT_NAME_LOWERCASE@ (2.2.0) stable; urgency=low
+
+  * You can now turn your Markdown tasks into a beautiful Kanban board
+  * Completely redesigned Editor Settings popup to quickly change the editor's settings
+  * New gear icon for global app settings
+  * Much improved Dark theme colors
+  * Text contrast in Sepia theme is improved
+  * Added alt+up/down keyboard shortcut to move the current line
+  * Toggling fullscreen is now possible with F11 & Esc
+  * Fixed markdown fonts not being resized properly
+  * Native window decoration is now default on Windows and Linux
+  * Fixed X11 linking on BSD systems
+  * Many more fixes and improvements under the hood
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Thu, 27 Jul 2023 12:09:49 +0000
+
+@PROJECT_NAME_LOWERCASE@ (2.1.0) stable; urgency=low
+
+  * You can now open external links by holding Ctrl while clicking them
+  * You can now format text using keyboard shortcuts (see docs/keyboard_shortcuts.md)
+  * Fixed bugs with custom window decorations
+  * We improved the style of selecting multiple notes
+  * Streamlined the look and feel of some windows to match the OS better
+  * Fixed issues when resizing the window's splitters and resizing the window itself
+  * Fixed some bugs causing crashes
+  * Many more fixes and improvements under the hood
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Wed, 08 Mar 2023 12:27:00 +0000
+
+@PROJECT_NAME_LOWERCASE@ (1.5.0) stable; urgency=low
+
+  * Fourth release
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Tue, 18 Mar 2020 01:00:00 +0100
+
+@PROJECT_NAME_LOWERCASE@ (1.0.0) stable; urgency=low
+
+  * Third release
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Tue, 3 Jul 2017 01:00:00 +0100
+
+@PROJECT_NAME_LOWERCASE@ (0.9.0) stable; urgency=low
+
+  * Second release
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Tue, 3 May 2016 01:00:00 +0100
+
+@PROJECT_NAME_LOWERCASE@ (0.8.0) stable; urgency=low
+
+  * Initial release
+
+ -- @APP_AUTHOR@ <@APP_AUTHOR_EMAIL@>  Sun, 13 Dec 2015 14:43:39 +0100

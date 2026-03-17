@@ -1,0 +1,39 @@
+{
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "cmake.useCMakePresets": "always",
+
+  "editor.fontFamily": "'Maple Mono NF CN', Menlo, Consolas, 'Maple UI', PingFang, 'Microsoft YaHei', monospace",
+  "editor.fontSize": 14,
+  "editor.fontLigatures": "'calt', 'cv01', 'ss01', 'zero'",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.renderWhitespace": "boundary",
+  "editor.rulers": [120],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+
+  "files.associations": {
+    "*.h": "cpp",
+    "*.hpp": "cpp",
+    "*.inl": "cpp"
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  "search.exclude": {
+    "**/build": true,
+    "**/.cache": true,
+    "**/node_modules": true,
+    "**/*_autogen": true
+  },
+
+  "terminal.integrated.fontFamily": "'Maple Mono NF CN', Consolas, monospace",
+  "terminal.integrated.fontSize": 13,
+
+  "lldb.useNativePDBReader": true,
+
+  "[cpp]": {
+    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+  }
+}

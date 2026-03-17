@@ -1,0 +1,178 @@
+QMainWindow.light,
+QWidget#verticalSpacer_upSearchEdit.light,
+QWidget#verticalSpacer_upSearchEdit2.light,
+QWidget#verticalSpacer_upTreeView.light,
+QFrame#frameLeft.light,
+QFrame#frameRightTop.light,
+QFrame#frameRight.light,
+QListView#tagListView.light,
+QTextEdit#textEdit.light {
+  background-color: rgb(247, 247, 247);
+}
+
+QMainWindow.dark,
+QWidget#verticalSpacer_upSearchEdit.dark,
+QWidget#verticalSpacer_upSearchEdit2.dark,
+QWidget#verticalSpacer_upTreeView.dark,
+QFrame#frameLeft.dark,
+QFrame#frameRightTop.dark,
+QFrame#frameRight.dark,
+QListView#tagListView.dark,
+QTextEdit#textEdit.dark {
+  background-color: rgb(25, 25, 25);
+}
+
+QMainWindow.sepia,
+QWidget#verticalSpacer_upSearchEdit.sepia,
+QWidget#verticalSpacer_upSearchEdit2.sepia,
+QWidget#verticalSpacer_upTreeView.sepia,
+QFrame#frameLeft.sepia,
+QFrame#frameRightTop.sepia,
+QFrame#frameRight.sepia,
+QListView#tagListView.sepia,
+QTextEdit#textEdit.sepia {
+  background-color: rgb(251, 240, 217);
+}
+
+QFrame#frameRight,
+QFrame#frameRightTop {
+  border: none;
+}
+
+/* Main editor */
+QTextEdit#textEdit {
+  selection-background-color: rgb(35, 131, 226);
+  selection-color: rgb(255, 255, 255);
+}
+
+QTextEdit#textEdit.light {
+  color: rgb(26, 26, 26);
+}
+
+QTextEdit#textEdit.dark {
+  color: rgb(212, 212, 212);
+}
+
+QTextEdit#textEdit.sepia {
+  color: rgb(50, 30, 3);
+}
+
+/* Label showing the name of the selected folder */
+QLabel#listviewLabel1.light {
+  color: rgb(26, 26, 26);
+}
+
+QLabel#listviewLabel1.dark {
+  color: rgb(212, 212, 212);
+}
+
+QLabel#listviewLabel1.sepia {
+  color: rgb(26, 26, 26);
+}
+
+/* Label showing the amount of notes in the selected folder/tags */
+QLabel#listviewLabel2 {
+  color: rgb(132, 132, 132);
+}
+
+/* Search bar */
+QLineEdit#searchEdit {
+  padding-left: 21px;
+  padding-right: 19px;
+  border: 1px solid rgb(205, 205, 205);
+  border-radius: 3px;
+  selection-background-color: rgb(61, 155, 218);
+}
+
+QLineEdit#searchEdit.light {
+  background-color: rgb(247, 247, 247);
+  color: rgb(26, 26, 26);
+  border: 1px solid rgb(205, 205, 205);
+}
+
+QLineEdit#searchEdit.dark {
+  background-color: rgb(25, 25, 25);
+  color: rgb(212, 212, 212);
+  border: 1px solid rgb(68, 68, 68);
+}
+
+QLineEdit#searchEdit.sepia {
+  background-color: rgb(251, 240, 217);
+  color: rgb(50, 30, 3);
+  border: 1px solid rgb(205, 205, 205);
+}
+
+QLineEdit#searchEdit:focus {
+  border: 2px solid rgb(61, 155, 218);
+}
+
+/* Buttons */
+/* The button inside of the search bar */
+QLineEdit#searchEdit QToolButton,
+/* The + button to create a new note */
+QPushButton#newNoteButton,
+/* The 3 dots button */
+QPushButton#dotsButton,
+/* The global settings button */
+QPushButton#globalSettingsButton,
+/* The button to toggle the tree view */
+QPushButton#toggleTreeViewButton,
+QPushButton#switchToTextViewButton,
+QPushButton#switchToKanbanViewButton,
+/* The Aa button to open the style editor */
+QPushButton {
+  border: none;
+  padding: 0px;
+  outline: none;
+}
+
+/* The two vertical lines that separate 3 MainWindow frames */
+QMainWindow.light,
+QFrame#verticalSplitterLine_left.light,
+QFrame#verticalSplitterLine_middle.light {
+  border: 1px solid rgb(191, 191, 191);
+}
+QMainWindow.dark,
+QFrame#verticalSplitterLine_left.dark,
+QFrame#verticalSplitterLine_middle.dark {
+  border: 1px solid rgb(68, 68, 68);
+}
+QMainWindow.sepia,
+QFrame#verticalSplitterLine_left.sepia,
+QFrame#verticalSplitterLine_middle.sepia {
+  border: 1px solid rgb(191, 191, 191);
+}
+
+/* Main menu */
+QMenu.menu {
+  background-color: rgb(255, 255, 255);
+  border: 1px solid #c7c7c7;
+}
+
+QMenu::item:selected {
+  background: 1px solid rgb(48, 140, 198);
+}
+
+QPushButton#globalSettingsButton,
+QPushButton#dotsButton,
+QPushButton#toggleTreeViewButton,
+QPushButton#newNoteButton,
+QPushButton#switchToKanbanViewButton {
+    color: rgb(68, 138, 201);
+}
+
+QPushButton#globalSettingsButton:hover,
+QPushButton#dotsButton:hover,
+QPushButton#toggleTreeViewButton:hover,
+QPushButton#newNoteButton:hover,
+QPushButton#switchToKanbanViewButton:hover {
+    color: rgb(51, 110, 162);
+}
+
+QPushButton#globalSettingsButton:pressed,
+QPushButton#dotsButton:pressed,
+QPushButton#toggleTreeViewButton:pressed,
+QPushButton#newNoteButton:pressed,
+QPushButton#switchToKanbanViewButton:pressed {
+    color: rgb(39, 85, 125);
+}

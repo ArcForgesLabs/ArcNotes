@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/green.png</file>
+        <file>images/greenHovered.png</file>
+        <file>images/greenInHovered.png</file>
+        <file>images/red.png</file>
+        <file>images/redHovered.png</file>
+        <file>images/redPressed.png</file>
+        <file>images/unfocusedButton.png</file>
+        <file>images/yellow.png</file>
+        <file>images/yellowHovered.png</file>
+        <file>images/yellowPressed.png</file>
+        <file>images/greenPressed.png</file>
+        <file>images/greenInPressed.png</file>
+        <file>images/notes_system_tray_icon.png</file>
+        <file>images/windows_close_hovered.png</file>
+        <file>images/windows_close_pressed.png</file>
+        <file>images/windows_close_regular.png</file>
+        <file>images/windows_de-maximize_hovered.png</file>
+        <file>images/windows_de-maximize_pressed.png</file>
+        <file>images/windows_de-maximize_regular.png</file>
+        <file>images/windows_maximize_hovered.png</file>
+        <file>images/windows_maximize_pressed.png</file>
+        <file>images/windows_maximize_regular.png</file>
+        <file>images/windows_minimize_hovered.png</file>
+        <file>images/windows_minimize_pressed.png</file>
+        <file>images/windows_minimize_regular.png</file>
+        <file>images/notes_icon.icns</file>
+        <file>images/notes_icon.ico</file>
+        <file>images/notes.rc</file>
+        <file>images/folder.png</file>
+        <file>images/confetti.png</file>
+        <file>images/notepad.icns</file>
+        <file>images/notepad.ico</file>
+    </qresource>
+</RCC>

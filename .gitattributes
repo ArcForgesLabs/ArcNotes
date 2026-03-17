@@ -1,0 +1,33 @@
+# Ensure GitHub treats headers as C++.
+*.h linguist-language=C++
+*.hpp linguist-language=C++
+*.inc linguist-language=C++
+
+# Normalize line endings across platforms.
+* text=auto eol=lf
+
+# Keep CRLF for Windows-specific files.
+*.bat eol=crlf
+*.sln eol=crlf
+*.vcxproj eol=crlf
+*.filters eol=crlf
+
+# Binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+*.qm binary
+
+# Common compiled outputs.
+*.a binary
+*.lib binary
+*.dll binary
+*.so binary
+*.dylib binary
