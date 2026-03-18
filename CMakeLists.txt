@@ -87,23 +87,39 @@ set(QT_COMPONENTS
     QuickWidgets)
 
 message(STATUS "Trying to find Qt 6...")
-find_package(QT NAMES Qt6 QUIET)
+if(NOT DEFINED Qt6_DIR AND DEFINED ENV{Qt6_DIR})
+  set(
+    Qt6_DIR
+    "$ENV{Qt6_DIR}"
+    CACHE PATH "Path to the Qt6 CMake package directory")
+endif()
 
-if(NOT DEFINED QT_VERSION_MAJOR OR QT_VERSION_MAJOR LESS 6)
-  message(STATUS "Could not find Qt 6, aborting compilation.")
+if(NOT DEFINED Qt6_DIR OR Qt6_DIR STREQUAL "")
+  message(
+    FATAL_ERROR
+      "Qt6_DIR is not set. Point it to the directory containing Qt6Config.cmake, for example C:/Qt/6.10.2/msvc2022_64/lib/cmake/Qt6."
+  )
 endif()
 
 # https://doc.qt.io/qt-6/whatsnew610.html#build-system-changes
+find_package(Qt6 REQUIRED COMPONENTS ${QT_COMPONENTS})
+
+set(QT_VERSION_MAJOR 6)
+set(QT_VERSION ${Qt6_VERSION})
+
 if(QT_VERSION VERSION_GREATER_EQUAL 6.10)
   list(APPEND QT_COMPONENTS CorePrivate GuiPrivate WidgetsPrivate)
 endif()
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
+if(QT_VERSION VERSION_GREATER_EQUAL 6.10)
+  find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate WidgetsPrivate)
+endif()
 
 message(STATUS "Success! Configuration details:")
 message(STATUS "App name: ${PROJECT_NAME}")
 message(STATUS "App version: ${PROJECT_VERSION}")
 message(STATUS "Qt version: ${QT_VERSION}")
+message(STATUS "Qt6_DIR: ${Qt6_DIR}")
 message(STATUS "Update checker: ${UPDATE_CHECKER}")
 message(STATUS "Pro Version: ${PRO_VERSION}")
 if(CMAKE_BUILD_TYPE STREQUAL "")
@@ -565,17 +581,29 @@ elseif(WIN32)
 
   target_link_libraries(${APP_TARGET} PUBLIC user32)
 
+  cmake_path(GET Qt6_DIR PARENT_PATH NOTES_QT_CMAKE_ROOT)
+  cmake_path(GET NOTES_QT_CMAKE_ROOT PARENT_PATH NOTES_QT_LIB_DIR)
+  set(NOTES_WINDEPLOYQT "${NOTES_QT_LIB_DIR}/../bin/windeployqt.exe")
+  cmake_path(NORMAL_PATH NOTES_WINDEPLOYQT OUTPUT_VARIABLE NOTES_WINDEPLOYQT)
+
+  if(NOT EXISTS "${NOTES_WINDEPLOYQT}")
+    message(
+      FATAL_ERROR
+        "windeployqt.exe was not found next to the configured Qt installation: ${NOTES_WINDEPLOYQT}"
+    )
+  endif()
+
   add_custom_command(
     TARGET ${APP_TARGET}
     POST_BUILD
     COMMAND
       ${CMAKE_COMMAND}
-      -DNOTES_DEPLOY_QT_PLATFORMS=$<IF:$<CONFIG:Debug>,ON,OFF>
-      -DNOTES_QT_BIN_DIR=$<TARGET_FILE_DIR:Qt${QT_VERSION_MAJOR}::Core>
+      -DNOTES_WINDEPLOYQT=${NOTES_WINDEPLOYQT}
+      -DNOTES_DEPLOY_CONFIGURATION=$<CONFIG>
+      -DNOTES_QML_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/qml
+      -DNOTES_TARGET_FILE=$<TARGET_FILE:${APP_TARGET}>
       -DNOTES_QT_RUNTIME_DEST=$<TARGET_FILE_DIR:${APP_TARGET}>
       -DNOTES_QT_CONF_PATH=$<TARGET_FILE_DIR:${APP_TARGET}>/qt.conf
-      -DNOTES_QT_PLATFORMS_DEST=$<TARGET_FILE_DIR:${APP_TARGET}>/platforms
-      -DNOTES_QT_QML_DEST=$<TARGET_FILE_DIR:${APP_TARGET}>/qml
       -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_qt_platforms.cmake
     VERBATIM)
 endif()
