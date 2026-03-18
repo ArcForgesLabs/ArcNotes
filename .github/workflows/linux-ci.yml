@@ -98,6 +98,17 @@ jobs:
       - name: Configure (CMake)
         run: cmake --preset linux-ci -DUSE_WERROR=ON
 
+      - name: Copy compile_commands.json for linting
+        run: cp build/linux-ci/compile_commands.json build/compile_commands.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.1
+
       - name: Build (FASTBuild)
         run: cmake --build --preset linux-ci
 
