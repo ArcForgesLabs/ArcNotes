@@ -11,7 +11,7 @@ MouseArea {
     property string pressedBackgroundColor: themeData.theme === "Dark" ? "#2c2c2c" : "#dfdfde"
     property bool isContainingMouse: optionItemMouseArea.containsMouse
     property bool checked: false
-    property var themeData: {{thme: "Light"}}
+    property var themeData: {{theme: "Light"}}
     property int pointSizeOffset: -4
 
     enabled: true
