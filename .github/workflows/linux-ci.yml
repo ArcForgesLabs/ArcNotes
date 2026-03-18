@@ -101,6 +101,11 @@ jobs:
       - name: Copy compile_commands.json for linting
         run: cp build/linux-ci/compile_commands.json build/compile_commands.json
 
+      - name: Generate AUTOGEN files for clang-tidy
+        run: |
+          cmake --build build/linux-ci --target arcnotes-app_autogen
+          cmake --build build/linux-ci --target arcnotes-tests_autogen
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
