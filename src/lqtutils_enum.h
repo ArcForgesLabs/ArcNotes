@@ -26,9 +26,10 @@
 
 #pragma once
 
+#include <qqmlintegration.h>
+
 #include <QObject>
 #include <QQmlEngine>
-#include <qqmlintegration.h>
 
 // older versions of clang-format (which are used by the CI) mess this up, so we disable formatting for this block
 // clang-format off

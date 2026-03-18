@@ -4,7 +4,7 @@ import QtQuick.Controls.Universal 2.12
 
 Switch {
     id: buttonContainer
-    property var themeData: {{thme: "Light"}}
+    property var themeData: {{theme: "Light"}}
     signal switched()
     Universal.theme: themeData.theme === "Dark" ? Universal.Dark : Universal.Light
 

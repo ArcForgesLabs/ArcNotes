@@ -1,6 +1,6 @@
 .pragma library
 // It takes four arguments. The verb, which defines the HTTP verb to be used (GET, POST, PUT, DELETE).
-// The second paramater is the BASE address (e.g. ‘http://localhost:5000 (opens new window)’).
+// The second parameter is the BASE address (e.g. ‘http://localhost:5000 (opens new window)’).
 // The third parameter is the endpoint to be used as a postfix to the BASE address
 // (e.g. ‘http://localhost:5000/colors (opens new window)’). The fourth parameter is the optional obj,
 // to be sent as JSON data to the service. The last parameter defines a callback to be called when

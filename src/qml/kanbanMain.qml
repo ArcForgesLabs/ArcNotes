@@ -93,7 +93,7 @@ Item {
                                                          });
             }
         } else {
-            // Update colums and tasks
+            // Update columns and tasks
             for (let k = 0; k < root.titlesAndTasksData.length; k++) {
                 if (root.titlesAndTasksData[k]) {
                     columnModel.set(k, {"columnStartLine": root.titlesAndTasksData[k].columnStartLine,
