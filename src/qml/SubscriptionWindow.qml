@@ -1,9 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 import QtQuick.Layouts 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
-import nuttyartist.notes 1.0
+import nuttyartist.notes 1.0 as Notes
 import "Utilities.js" as Utils
+
 
 ApplicationWindow {
     id: root
@@ -39,7 +42,7 @@ ApplicationWindow {
     signal subscribedSuccessfully
 
     property bool isProVersion: false
-    property int subscriptionStatus: SubscriptionStatus.NoSubscription
+    property int subscriptionStatus: Notes.SubscriptionStatus.NoSubscription
     property bool forceSubscriptionStatus: false
     property string sadIconColor: root.themeData.theme === "Dark" ? "#f5ce42" : "#ebb434"
 
@@ -72,14 +75,14 @@ ApplicationWindow {
         function onProVersionCheck (data) {
             root.isProVersion = data;
 
-            if (root.isVerifyingAgain && (!root.isProVersion || root.subscriptionStatus === SubscriptionStatus.NoInternetConnection)) {
+            if (root.isVerifyingAgain && (!root.isProVersion || root.subscriptionStatus === Notes.SubscriptionStatus.NoInternetConnection)) {
                 root.showMessageAfterFailedInternet = true;
             }
 
             root.isVerifyingAgain = false;
 
-            if (root.isProVersion && (root.subscriptionStatus === SubscriptionStatus.GracePeriodOver ||
-                                      root.subscriptionStatus === SubscriptionStatus.EnteredGracePeriod)) {
+            if (root.isProVersion && (root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver ||
+                                      root.subscriptionStatus === Notes.SubscriptionStatus.EnteredGracePeriod)) {
                 root.showMessageAfterFailedInternet = false;
                 root.successActivationPopupMainCopy = qsTr("Successfully Verified Notes Pro");
                 root.successActivationPopupSecondaryCopy = qsTr("Your access to Pro features will continue as long as your subscription remains active. Enjoy!")
@@ -763,7 +766,7 @@ ApplicationWindow {
                 font.pointSize: 12 + root.pointSizeOffset
                 font.weight: Font.Bold
                 wrapMode: Text.WordWrap
-                onLinkActivated: Qt.openUrlExternally(link)
+                onLinkActivated: (link) => Qt.openUrlExternally(link)
                 textFormat: TextEdit.RichText
 
                 MouseArea {
@@ -1239,63 +1242,63 @@ ApplicationWindow {
 
             Row {
                 Loader {
-                    sourceComponent: if (root.subscriptionStatus === SubscriptionStatus.NoSubscription ) {
+                    sourceComponent: if (root.subscriptionStatus === Notes.SubscriptionStatus.NoSubscription ) {
                                          upgradeToProCopy
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.Expired) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.Expired) {
                                          subscriptionExpiredCopy
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.Invalid) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.Invalid) {
                                          licenseInvalidCopy
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.UnknownError) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.UnknownError) {
                                          unknownErrorCopy
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.GracePeriodOver) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver) {
                                          gracePeriodOverCopy
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.Active) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.Active) {
                                          manageSubscription
-                                     } else if (root.subscriptionStatus === SubscriptionStatus.NoInternetConnection ||
-                                                root.subscriptionStatus === SubscriptionStatus.EnteredGracePeriod) {
+                                     } else if (root.subscriptionStatus === Notes.SubscriptionStatus.NoInternetConnection ||
+                                                root.subscriptionStatus === Notes.SubscriptionStatus.EnteredGracePeriod) {
                                         noInternetConnectionCopy
                                      }
 
-                    active: root.subscriptionStatus === SubscriptionStatus.NoSubscription ||
-                            root.subscriptionStatus === SubscriptionStatus.Expired ||
-                            root.subscriptionStatus === SubscriptionStatus.Invalid ||
-                            root.subscriptionStatus === SubscriptionStatus.UnknownError ||
-                            root.subscriptionStatus === SubscriptionStatus.GracePeriodOver ||
-                            root.subscriptionStatus === SubscriptionStatus.Active ||
-                            root.subscriptionStatus === SubscriptionStatus.NoInternetConnection ||
-                            root.subscriptionStatus === SubscriptionStatus.EnteredGracePeriod
+                    active: root.subscriptionStatus === Notes.SubscriptionStatus.NoSubscription ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.Expired ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.Invalid ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.UnknownError ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.Active ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.NoInternetConnection ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.EnteredGracePeriod
                 }
 
                 Loader {
-                    sourceComponent: if (root.subscriptionStatus === SubscriptionStatus.GracePeriodOver ||
-                                             root.subscriptionStatus === SubscriptionStatus.NoInternetConnection ||
-                                             root.subscriptionStatus === SubscriptionStatus.EnteredGracePeriod) {
+                    sourceComponent: if (root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver ||
+                                             root.subscriptionStatus === Notes.SubscriptionStatus.NoInternetConnection ||
+                                             root.subscriptionStatus === Notes.SubscriptionStatus.EnteredGracePeriod) {
                                          checkInternetConnectionCta
                                      } else {
                                          upgradeToProCta
                                      }
 
-                    active: root.subscriptionStatus === SubscriptionStatus.NoSubscription ||
-                            root.subscriptionStatus === SubscriptionStatus.Expired ||
-                            root.subscriptionStatus === SubscriptionStatus.Invalid ||
-                            root.subscriptionStatus === SubscriptionStatus.GracePeriodOver ||
-                            root.subscriptionStatus === SubscriptionStatus.NoInternetConnection ||
-                            root.subscriptionStatus === SubscriptionStatus.EnteredGracePeriod
+                    active: root.subscriptionStatus === Notes.SubscriptionStatus.NoSubscription ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.Expired ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.Invalid ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.NoInternetConnection ||
+                            root.subscriptionStatus === Notes.SubscriptionStatus.EnteredGracePeriod
                 }
             }
 
             Loader {
                 sourceComponent: accessByCompilationCopy
-                active: root.subscriptionStatus === SubscriptionStatus.NoSubscription
+                active: root.subscriptionStatus === Notes.SubscriptionStatus.NoSubscription
             }
 
             Loader {
                 sourceComponent: termsAndPrivacy
-                active: root.subscriptionStatus === SubscriptionStatus.NoSubscription ||
-                        root.subscriptionStatus === SubscriptionStatus.Expired ||
-                        root.subscriptionStatus === SubscriptionStatus.Invalid ||
-                        root.subscriptionStatus === SubscriptionStatus.GracePeriodOver ||
-                        root.subscriptionStatus === SubscriptionStatus.Active
+                active: root.subscriptionStatus === Notes.SubscriptionStatus.NoSubscription ||
+                        root.subscriptionStatus === Notes.SubscriptionStatus.Expired ||
+                        root.subscriptionStatus === Notes.SubscriptionStatus.Invalid ||
+                        root.subscriptionStatus === Notes.SubscriptionStatus.GracePeriodOver ||
+                        root.subscriptionStatus === Notes.SubscriptionStatus.Active
             }
 
             Item {

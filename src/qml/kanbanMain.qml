@@ -1,9 +1,12 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Particles 2.12
 import QtQuick.Layouts 2.12
-import nuttyartist.notes 1.0
+import nuttyartist.notes 1.0 as Notes
+// qmllint disable unqualified unresolved-type missing-property incompatible-type
 
 Item {
     id: root
@@ -76,16 +79,17 @@ Item {
             }
 
             for (var n = 0; n < taskModelsRepeater.count; n++) {
+                let taskModelItem = taskModelsRepeater.itemAt(n);
                 root.titlesAndTasksData[n].tasks.forEach(taskData => {
 
                                                              if (taskData.checked) {
                                                                  root.totalCompletedTasks++;
                                                              }
 
-                                                             taskModelsRepeater.itemAt(n).taskModel.append({"taskText": taskData.text, "taskChecked": taskData.checked,
-                                                                                                               "taskStartLine": taskData.taskStartLine,
-                                                                                                               "taskEndLine": taskData.taskEndLine,
-                                                                                                               "doNeedAnimateTaskCreation": false});
+                                                             taskModelItem["taskModel"].append({"taskText": taskData.text, "taskChecked": taskData.checked,
+                                                                                                 "taskStartLine": taskData.taskStartLine,
+                                                                                                 "taskEndLine": taskData.taskEndLine,
+                                                                                                 "doNeedAnimateTaskCreation": false});
                                                          });
             }
         } else {
@@ -147,8 +151,9 @@ Item {
         // We replaced this with root.taskModelByColumnIDDict
         function getTaskModelByColumnID (columnID: int) {
             for (let i = 0; i < taskModelsRepeater.count; i++) {
-                if (taskModelsRepeater.itemAt(i).columnID === columnID) {
-                    return taskModelsRepeater.itemAt(i).taskModel;
+                let taskModelItem = taskModelsRepeater.itemAt(i);
+                if (taskModelItem["columnID"] === columnID) {
+                    return taskModelItem["taskModel"];
                 }
             }
         }
@@ -166,7 +171,7 @@ Item {
                      }
 
         onItemRemoved: (index, item) => {
-                           delete root.taskModelByColumnIDDict[item.columID];
+                           delete root.taskModelByColumnIDDict[item.columnID];
                        }
     }
 
@@ -387,7 +392,7 @@ Item {
         x: root.parentWindowX + root.parentWindowWidth/2 - proPaymentWindow.width/2
         y: root.parentWindowY + root.parentWindowHeight/2 - proPaymentWindow.height/2
         forceSubscriptionStatus: true
-        subscriptionStatus: SubscriptionStatus.NoSubscription
+        subscriptionStatus: Notes.SubscriptionStatus.NoSubscription
     }
 
     Rectangle {
@@ -570,7 +575,7 @@ Item {
             ProgressBar {
                 id: progressBar
                 visible: root.showProgressBar
-                width: 150
+                Layout.preferredWidth: 150
                 value: root.totalCompletedTasks / root.totalTasks
             }
 
@@ -925,3 +930,4 @@ Item {
         }
     }
 }
+// qmllint enable unqualified unresolved-type missing-property incompatible-type

@@ -1,7 +1,6 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Universal 2.12
+pragma ComponentBehavior: Bound
 
+import QtQuick 2.12
 MouseArea {
     id: taskDragArea
 
@@ -135,7 +134,7 @@ MouseArea {
                     taskDragArea.rootContainer.totalCompletedTasks--;
                     taskDragArea.columnParent.numberOfCompletedTasks--;
                 }
-                let columnID = columnParent.columnID;
+                    let columnID = taskDragArea.columnParent.columnID;
                 let taskIndex = DelegateModel.itemsIndex;
                 taskDragArea.rootContainer.removeTask(taskDragArea.taskStartLine, taskDragArea.taskEndLine, columnID, taskIndex);
             }
@@ -428,7 +427,7 @@ MouseArea {
             if (taskDragArea.held && taskDragArea.currentTargetColumnDraggedInto) {
 
                 let taskContentY = taskContent.mapToItem(taskDragArea.currentTargetColumnDraggedInto.parent, 0, 0).y;
-                let currentColumnY = taskDragArea.currentTargetColumnDraggedInto.mapToItem(currentTargetColumnDraggedInto.parent, 0, 0).y;
+                let currentColumnY = taskDragArea.currentTargetColumnDraggedInto.mapToItem(taskDragArea.currentTargetColumnDraggedInto.parent, 0, 0).y;
 
                 if (taskContentY + taskContent.height/2 > currentColumnY + taskDragArea.currentTargetColumnDraggedInto.height - taskDragArea.currentTargetColumnDraggedInto.yUntilTasks) {
                     taskDragArea.currentTargetColumnDraggedInto.tasksScrollingDirection = 1;
@@ -450,11 +449,11 @@ MouseArea {
 
         onXChanged: {
             if (taskDragArea.held) {
-                let taskContentX = taskContent.mapToItem(todosColumnsViewPointerFromTask, 0, 0).x;
+                let taskContentX = taskContent.mapToItem(taskDragArea.todosColumnsViewPointerFromTask, 0, 0).x;
                 if (taskContentX < taskDragArea.scrollEdgeSize - taskContent.width/2 + taskDragArea.rootTodoContainer.scrollEdgeSize - 10) {
                     taskDragArea.rootTodoContainer.scrollingDirection = -1;
                     taskDragArea.rootTodoContainer.isItemScrollingColumnsView = true;
-                } else if (taskContentX + taskContent.width/2 + taskDragArea.rootTodoContainer.scrollEdgeSize > todosColumnsViewPointerFromColumn.width) {
+                } else if (taskContentX + taskContent.width / 2 + taskDragArea.rootTodoContainer.scrollEdgeSize > taskDragArea.todosColumnsViewPointerFromTask.width) {
                     taskDragArea.rootTodoContainer.scrollingDirection = 1;
                     taskDragArea.rootTodoContainer.isItemScrollingColumnsView = true;
                 } else {
@@ -462,8 +461,8 @@ MouseArea {
                 }
 
                 // TODO: This is not very efficient, we need to make DropArea in columns work
-                for (let i = 0; i < todosColumnsViewPointerFromTask.model.items.count; i++) {
-                    let currentColumn = todosColumnsViewPointerFromTask.itemAtIndex(i);
+                for (let i = 0; i < taskDragArea.todosColumnsViewPointerFromTask.model.items.count; i++) {
+                    let currentColumn = taskDragArea.todosColumnsViewPointerFromTask.itemAtIndex(i);
                     if (currentColumn !== null) {
                         let taskContentX = taskContent.mapToItem(currentColumn.parent, 0, 0).x;
                         let taskContentY = taskContent.mapToItem(currentColumn.parent, 0, 0).y;
@@ -743,48 +742,50 @@ MouseArea {
         id: dropArea
         anchors { fill: parent}
         keys: ["task"]
+        // qmllint disable missing-property
 
         onEntered: (drag)=> {
            taskDragArea.isAnotherTaskEntered = true;
+           let dragSource = drag.source;
 
-           if (drag.source.previouslyEnteredTask !== taskDragArea) {
-               if(drag.source.previouslyEnteredTask !== null) {
-                   drag.source.previouslyEnteredTask.makeRoomForTask = true;
-                   drag.source.previouslyEnteredTask.shouldRestoreOriginalSize = true;
+           if (dragSource["previouslyEnteredTask"] !== taskDragArea) {
+               if (dragSource["previouslyEnteredTask"] !== null) {
+                   dragSource["previouslyEnteredTask"].makeRoomForTask = true;
+                   dragSource["previouslyEnteredTask"].shouldRestoreOriginalSize = true;
                }
 
-               drag.source.previouslyEnteredTask = taskDragArea;
+               dragSource["previouslyEnteredTask"] = taskDragArea;
            }
 
-           drag.source.currentTargetTaskDraggedInto = taskDragArea;
+           dragSource["currentTargetTaskDraggedInto"] = taskDragArea;
            // TODO: Animate this for a smoother experience
-           taskDragArea.height = taskDragArea.taskContentHeight + drag.source.originalHeight + taskDragArea.spacing;
-           let taskContentY = drag.source.taskContentAlias.mapToItem(taskDragArea.rootContainer, 0, 0).y;
+           taskDragArea.height = taskDragArea.taskContentHeight + dragSource["originalHeight"] + taskDragArea.spacing;
+           let taskContentY = dragSource["taskContentAlias"].mapToItem(taskDragArea.rootContainer, 0, 0).y;
            let currentTargetTaskDraggedIntoY = taskDragArea.mapToItem(taskDragArea.rootContainer, 0, 0).y;
 
-           if (drag.source.currentlyEnteredColumn !== taskDragArea.listViewParent) {
-               drag.source.shouldHideRoot = true;
+           if (dragSource["currentlyEnteredColumn"] !== taskDragArea.listViewParent) {
+               dragSource["shouldHideRoot"] = true;
                taskDragArea.makeRoomDirection = "down";
                taskDragArea.makeRoomForTask = true;
-               drag.source.currentlyEnteredColumn = taskDragArea.listViewParent;
-           } else if (taskContentY + drag.source.taskContentHeight/2 < currentTargetTaskDraggedIntoY + taskContent.height/2) {
+               dragSource["currentlyEnteredColumn"] = taskDragArea.listViewParent;
+           } else if (taskContentY + dragSource["taskContentHeight"] / 2 < currentTargetTaskDraggedIntoY + taskContent.height / 2) {
                if (taskDragArea.makeRoomDirection !== "up") {
-                   drag.source.shouldHideRoot = true;
+                   dragSource["shouldHideRoot"] = true;
                    taskDragArea.makeRoomDirection = "up";
                    taskDragArea.makeRoomForTask = true;
-                   drag.source.currentlyEnteredColumn = taskDragArea.listViewParent;
+                   dragSource["currentlyEnteredColumn"] = taskDragArea.listViewParent;
                } else if (taskDragArea.makeRoomDirection !== "down") {
-                   drag.source.shouldHideRoot = true;
+                   dragSource["shouldHideRoot"] = true;
                    taskDragArea.makeRoomDirection = "down";
                    taskDragArea.makeRoomForTask = true;
-                   drag.source.currentlyEnteredColumn = taskDragArea.listViewParent;
+                   dragSource["currentlyEnteredColumn"] = taskDragArea.listViewParent;
                }
            }
        }
 
         onExited: {
             taskDragArea.isAnotherTaskEntered = false;
-            if (drag.source.held) {
+            if (drag.source["held"]) {
                 taskDragArea.shouldRestoreOriginalSize = true;
             } else {
                 taskDragArea.height = Qt.binding(function () { return taskDragArea.originalHeight });
@@ -792,7 +793,8 @@ MouseArea {
                 taskDragArea.makingRoomAnimationFinished = true;
             }
 
-            drag.source.currentTargetTaskDraggedInto = null;
+            drag.source["currentTargetTaskDraggedInto"] = null;
         }
+        // qmllint enable missing-property
     }
 }

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 
 Item {
@@ -97,11 +99,14 @@ Item {
             font.family: root.iconFontFamily
             color: root.iconColorDefault
             font.pointSize: root.iconFontPointSize + root.pointSizeOffset
-            anchors.verticalCenter: buttonText.verticalCenter
-            anchors.right: root.textAlignment === TextButton.TextAlign.Left || root.textAlignment === TextButton.TextAlign.Middle ? buttonText.left : undefined
-            anchors.rightMargin: root.iconLeftRightMargin
-            anchors.left: root.textAlignment === TextButton.TextAlign.Right ? buttonText.right : undefined
-            anchors.leftMargin: root.iconLeftRightMargin
+            y: buttonText.y + (buttonText.height - height) / 2
+            x: {
+                if (root.textAlignment === TextButton.TextAlign.Right) {
+                    return buttonText.x + buttonText.width + root.iconLeftRightMargin;
+                }
+
+                return buttonText.x - width - root.iconLeftRightMargin;
+            }
         }
 
         Text {
@@ -111,12 +116,18 @@ Item {
             font.pointSize: root.textFontPointSize + root.pointSizeOffset
             font.family: root.displayFontFamily
             font.weight: root.textFontWeight
-            anchors.verticalCenter: innerButtonRect.verticalCenter
-            anchors.left: root.textAlignment === TextButton.TextAlign.Left ? innerButtonRect.left : undefined
-            anchors.leftMargin: root.textLeftRightMargin
-            anchors.right: root.textAlignment === TextButton.TextAlign.Right ? innerButtonRect.right : undefined
-            anchors.rightMargin: root.textLeftRightMargin
-            anchors.horizontalCenter: root.textAlignment === TextButton.TextAlign.Middle ? innerButtonRect.horizontalCenter : undefined
+            y: (innerButtonRect.height - height) / 2
+            x: {
+                if (root.textAlignment === TextButton.TextAlign.Left) {
+                    return root.textLeftRightMargin;
+                }
+
+                if (root.textAlignment === TextButton.TextAlign.Right) {
+                    return innerButtonRect.width - width - root.textLeftRightMargin;
+                }
+
+                return (innerButtonRect.width - width) / 2;
+            }
         }
     }
 }

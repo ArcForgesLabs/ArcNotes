@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 
 set(APP_VERSION 2.3.1)
 set(APP_ID "io.github.nuttyartist.notes")
+set(QML_MODULE_URI "nuttyartist.notes")
 set(APP_TARGET "arcnotes-app")
 set(APP_AUTHOR "Ruby Mamistvalove")
 set(APP_AUTHOR_EMAIL "ruby.mamistvalove@gmail.com")
@@ -416,9 +417,9 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
   qt_add_qml_module(
     ${APP_TARGET}
     URI
-    ${APP_ID}
+    ${QML_MODULE_URI}
     VERSION
-    ${PROJECT_VERSION}
+    1.0
     NO_PLUGIN
     RESOURCE_PREFIX
     "/qt/qml"
@@ -607,6 +608,18 @@ elseif(WIN32)
       -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/copy_qt_platforms.cmake
     VERBATIM)
 endif()
+
+add_custom_command(
+  TARGET ${APP_TARGET}
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND}
+    -DNOTES_QMLLS_DEST=${CMAKE_SOURCE_DIR}/.qmlls.ini
+    -DNOTES_QMLLS_BUILD_DIR=${CMAKE_BINARY_DIR}
+    -DNOTES_QMLLS_IMPORT_PATHS=$<TARGET_FILE_DIR:${APP_TARGET}>;$<TARGET_FILE_DIR:${APP_TARGET}>/qml
+    -DNOTES_QMLLS_DOC_DIR=${QT_INSTALL_DOCS}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sync_qmlls_ini.cmake
+  VERBATIM)
 
 install(
   TARGETS ${APP_TARGET}
