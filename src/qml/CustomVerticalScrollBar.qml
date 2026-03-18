@@ -5,9 +5,9 @@ import QtQuick.Controls.Material 2.12
 ScrollBar {
     id: scrollBarControl
 //    parent: scrollViewControl
-    x: parent.mirrored ? 0 : parent.width - width
+    x: scrollBarControl.mirrored ? 0 : (parent ? parent.width - width : 0)
 //    y: parent.topPadding
-    height: parent.availableHeight
+    height: parent ? parent.height : implicitHeight
     property var themeData: {{theme: "Light"}}
     property bool isDarkGray: true // Determines whether the scrollbar color in Dark mode should be grayish or darkish
     property bool showBackground: false
@@ -15,7 +15,7 @@ ScrollBar {
     background: Rectangle {
         width: scrollBarControl.hovered ? 1 : 7
         radius: width / 2
-        height: scrollBarControl.availableHeight
+        height: scrollBarControl.height
         color: "transparent"
         border.color: scrollBarControl.themeData.theme === "Dark" ? "#534c53" : "#dfdfdf"
         opacity: 0.25
