@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
@@ -22,6 +24,19 @@ Column {
 
     signal themeChanged
     signal clicked(int chosenFontIndex)
+
+    function itemTextAt(itemIndex) {
+        if (!comboBoxControl.textRole) {
+            return Array.isArray(comboBoxControl.model) ? comboBoxControl.model[itemIndex]
+                                                        : comboBoxControl.model.get(itemIndex);
+        }
+
+        if (Array.isArray(comboBoxControl.model)) {
+            return comboBoxControl.model[itemIndex][comboBoxControl.textRole];
+        }
+
+        return comboBoxControl.model.get(itemIndex)[comboBoxControl.textRole];
+    }
 
     onClicked: {
         rootContainer.checked = true;
@@ -148,19 +163,18 @@ Column {
 
         delegate: ItemDelegate {
             id: comboItemDelegate
+            required property int index
             width: comboBoxControl.width*2.5
             height: comboBoxControl.height
             contentItem: Text {
-                text: comboBoxControl.textRole
-                    ? (Array.isArray(comboBoxControl.model) ? modelData[comboBoxControl.textRole] : model[comboBoxControl.textRole])
-                    : modelData
-                color: comboBoxControl.currentIndex === index ? "#2383e2" : rootContainer.mainFontColor
+                text: rootContainer.itemTextAt(comboItemDelegate.index)
+                color: comboBoxControl.currentIndex === comboItemDelegate.index ? "#2383e2" : rootContainer.mainFontColor
                 font.pointSize: comboBoxControl.font.pointSize+1
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
                 font.family: rootContainer.displayFontFamily
             }
-            highlighted: comboBoxControl.highlightedIndex === index
+            highlighted: comboBoxControl.highlightedIndex === comboItemDelegate.index
         }
 
         indicator: Canvas {

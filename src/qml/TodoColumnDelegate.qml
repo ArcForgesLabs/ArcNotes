@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
@@ -151,7 +153,6 @@ MouseArea {
         color: dragArea.rootContainer.showColumnsBorders ? dragArea.themeData.backgroundColor : "transparent"
         scale: dragArea.held ? 1.05 : 1.0
         anchors {
-            id: todoColumnContentAnchors
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
         }
@@ -162,11 +163,11 @@ MouseArea {
 
         onXChanged: {
             if (dragArea.held) {
-                let todoColumnContentX = todoColumnContent.mapToItem(todosColumnsViewPointerFromColumn, 0, 0).x;
+                let todoColumnContentX = todoColumnContent.mapToItem(dragArea.todosColumnsViewPointerFromColumn, 0, 0).x;
                 if (todoColumnContentX < dragArea.rootTodoContainer.scrollEdgeSize) {
                     dragArea.rootTodoContainer.scrollingDirection = -1;
                     dragArea.rootTodoContainer.isItemScrollingColumnsView = true;
-                } else if (todoColumnContentX + todoColumnContent.width/2 > todosColumnsViewPointerFromColumn.width - dragArea.rootTodoContainer.scrollEdgeSize) {
+                } else if (todoColumnContentX + todoColumnContent.width / 2 > dragArea.todosColumnsViewPointerFromColumn.width - dragArea.rootTodoContainer.scrollEdgeSize) {
                     dragArea.rootTodoContainer.scrollingDirection = 1;
                     dragArea.rootTodoContainer.isItemScrollingColumnsView = true;
                 } else {
@@ -328,7 +329,7 @@ MouseArea {
                     Text {
                         text: qsTr("This will delete ALL tasks inside ") + dragArea.title + "."
                         font.family: dragArea.rootContainer.bodyFontFamily
-                        font.pointSize: root.platform === "Apple" ? 15 : 15 + dragArea.rootContainer.pointSizeOffset
+                        font.pointSize: dragArea.rootContainer.platform === "Apple" ? 15 : 15 + dragArea.rootContainer.pointSizeOffset
                         color: dragArea.themeData.theme === "Dark" ? "white" : "black"
                     }
 
@@ -457,7 +458,7 @@ MouseArea {
                     onReturnPressed: {
                         if (!newTaskTextEdit.isHoldingShift) {
                             if (newTaskTextEdit.text.trim() !== "") {
-                                createNewTask(newTaskTextEdit.text);
+                                dragArea.createNewTask(newTaskTextEdit.text);
                                 newTaskTextEdit.text = "";
                             }
                         } else {

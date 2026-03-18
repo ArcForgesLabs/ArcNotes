@@ -43,6 +43,7 @@ src/snap
 src/uic
 src/notes
 .qmake.stash
+.qmlls.ini
 
 
 ### Clion ###

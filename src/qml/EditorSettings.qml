@@ -1,8 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
-import nuttyartist.notes 1.0
+import nuttyartist.notes 1.0 as Notes
 //import notes
+// qmllint disable unqualified unresolved-type missing-property
 
 Item {
     id: settingsContainer
@@ -69,7 +72,7 @@ Item {
 
         function onThemeChanged (data) {
             settingsContainer.themeData = data;
-            themeChanged();
+            settingsContainer.themeChanged();
         }
 
         function onEditorSettingsScrollBarPositionChanged (data) {
@@ -248,7 +251,7 @@ Item {
                                    chosenFontIndex = currentlyChosenFontIndex;
                                 }
                             }
-                            mainWindow.changeEditorFontTypeFromStyleButtons(FontTypeface.SansSerif, chosenFontIndex);
+                            mainWindow.changeEditorFontTypeFromStyleButtons(Notes.FontTypeface.SansSerif, chosenFontIndex);
                             fontChooserSerif.checked = false;
                             fontChooserMono.checked = false;
                         }
@@ -286,7 +289,7 @@ Item {
                                   chosenFontIndex = currentlyChosenFontIndex;
                                }
                            }
-                            mainWindow.changeEditorFontTypeFromStyleButtons(FontTypeface.Serif, chosenFontIndex);
+                            mainWindow.changeEditorFontTypeFromStyleButtons(Notes.FontTypeface.Serif, chosenFontIndex);
                             fontChooserSans.checked = false;
                             fontChooserMono.checked = false;
                         }
@@ -324,7 +327,7 @@ Item {
                                   chosenFontIndex = currentlyChosenFontIndex;
                                }
                            }
-                            mainWindow.changeEditorFontTypeFromStyleButtons(FontTypeface.Mono, chosenFontIndex);
+                            mainWindow.changeEditorFontTypeFromStyleButtons(Notes.FontTypeface.Mono, chosenFontIndex);
                             fontChooserSans.checked = false;
                             fontChooserSerif.checked = false;
                         }
@@ -401,7 +404,7 @@ Item {
                             enabled: settingsContainer.currentlySelectedView === "TextView"
 
                             onClicked: {
-                                mainWindow.changeEditorFontSizeFromStyleButtons(FontSizeAction.FontSizeDecrease);
+                                mainWindow.changeEditorFontSizeFromStyleButtons(Notes.FontSizeAction.FontSizeDecrease);
                             }
                         }
 
@@ -420,7 +423,7 @@ Item {
                             enabled: settingsContainer.currentlySelectedView === "TextView"
 
                             onClicked: {
-                                mainWindow.changeEditorFontSizeFromStyleButtons(FontSizeAction.FontSizeIncrease);
+                                mainWindow.changeEditorFontSizeFromStyleButtons(Notes.FontSizeAction.FontSizeIncrease);
                             }
                         }
                     }
@@ -440,11 +443,11 @@ Item {
                         enabled: settingsContainer.currentlySelectedView === "TextView"
 
                         onSwitched: {
-                            mainWindow.changeEditorTextWidthFromStyleButtons(EditorTextWidth.TextWidthFullWidth)
+                            mainWindow.changeEditorTextWidthFromStyleButtons(Notes.EditorTextWidth.TextWidthFullWidth)
                         }
 
                         onUnswitched: {
-                            mainWindow.changeEditorTextWidthFromStyleButtons(EditorTextWidth.TextWidthFullWidth)
+                            mainWindow.changeEditorTextWidthFromStyleButtons(Notes.EditorTextWidth.TextWidthFullWidth)
                         }
                     }
 
@@ -483,7 +486,7 @@ Item {
                             enabled: settingsContainer.currentlySelectedView === "TextView"
 
                             onClicked: {
-                                mainWindow.changeEditorTextWidthFromStyleButtons(EditorTextWidth.TextWidthDecrease)
+                                mainWindow.changeEditorTextWidthFromStyleButtons(Notes.EditorTextWidth.TextWidthDecrease)
                             }
                         }
 
@@ -502,7 +505,7 @@ Item {
                             enabled: settingsContainer.currentlySelectedView === "TextView"
 
                             onClicked: {
-                                mainWindow.changeEditorTextWidthFromStyleButtons(EditorTextWidth.TextWidthIncrease)
+                                mainWindow.changeEditorTextWidthFromStyleButtons(Notes.EditorTextWidth.TextWidthIncrease)
                             }
                         }
                     }
@@ -555,7 +558,7 @@ Item {
                         qtVersion: settingsContainer.qtVersion
 
                         onClicked: {
-                            mainWindow.setTheme(Theme.Light);
+                            mainWindow.setTheme(Notes.Theme.Light);
                             darkThemeChooserButton.unclicked();
                             sepiaThemeChooserButton.unclicked();
                         }
@@ -582,7 +585,7 @@ Item {
                         qtVersion: settingsContainer.qtVersion
 
                         onClicked: {
-                            mainWindow.setTheme(Theme.Dark);
+                            mainWindow.setTheme(Notes.Theme.Dark);
                             lightThemeChooserButton.unclicked();
                             sepiaThemeChooserButton.unclicked();
                         }
@@ -609,7 +612,7 @@ Item {
                         qtVersion: settingsContainer.qtVersion
 
                         onClicked: {
-                            mainWindow.setTheme(Theme.Sepia);
+                            mainWindow.setTheme(Notes.Theme.Sepia);
                             lightThemeChooserButton.unclicked();
                             darkThemeChooserButton.unclicked();
                         }
@@ -948,3 +951,4 @@ Item {
         }
     }
 }
+// qmllint enable unqualified unresolved-type missing-property

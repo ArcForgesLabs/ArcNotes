@@ -6,14 +6,14 @@ ScrollBar {
     id: scrollBarControl
 //    parent: scrollViewControl
 //    x: parent.mirrored ? 0 : parent.width - width
-    y: parent.mirrored ? 0 : parent.height - height
-    width: parent.availableWidth
+    y: parent ? parent.height - height : 0
+    width: parent ? parent.width : implicitWidth
     property var themeData: {{theme: "Light"}}
     property bool isDarkGray: true // Determines whether the scrollbar color in Dark mode should be grayish or darkish
     property bool showBackground: false
 
     background: Rectangle {
-        width: scrollBarControl.availableWidth
+        width: scrollBarControl.width
         radius: height / 2
         height: scrollBarControl.hovered ? 1 : 7
         color: "transparent"
