@@ -62,13 +62,20 @@ jobs:
           sudo mkdir -p /cache/fastbuild
           sudo chown "$USER":"$USER" /cache/fastbuild
 
+      - name: Restore FASTBuild compilation cache
+        uses: actions/cache@v5
+        with:
+          path: /cache/fastbuild
+          key: fbcache-linux-${{ github.sha }}
+          restore-keys: fbcache-linux-
+
       - name: Install Qt 6.10.2
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.10.2'
           host: 'linux'
           target: 'desktop'
-          arch: 'gcc_64'
+          arch: 'linux_gcc_64'
           cache: true
           setup-python: false
           install-deps: false
@@ -100,10 +107,15 @@ jobs:
       - name: Launch smoke test
         run: |
           set +e
-          QT_QPA_PLATFORM=offscreen timeout 5s ./build/linux-ci/notes
+          xvfb-run -a env QT_QPA_PLATFORM=xcb timeout 5s ./build/linux-ci/notes
           status=$?
           if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
             echo "notes exited with unexpected status: $status"
             exit "$status"
           fi
           exit 0
+
+      - name: Trim FASTBuild cache
+        if: always()
+        run: fbuild -cachetrim 10240
+        working-directory: ${{ github.workspace }}/build/linux-ci

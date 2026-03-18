@@ -90,6 +90,35 @@ jobs:
           "WindowsKitRC=$($rc.DirectoryName)" >> $env:GITHUB_ENV
           $rc.DirectoryName >> $env:GITHUB_PATH
 
+      - name: Resolve FASTBuild cache path
+        id: fbcache
+        run: |
+          $fbCache = Join-Path $env:LOCALAPPDATA 'FASTBuild' 'Cache'
+          New-Item $fbCache -ItemType Directory -Force | Out-Null
+          "path=$fbCache" >> $env:GITHUB_OUTPUT
+          Write-Host "FASTBuild cache: $fbCache"
+
+      - name: Restore FASTBuild compilation cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.fbcache.outputs.path }}
+          key: fbcache-windows-${{ github.sha }}
+          restore-keys: fbcache-windows-
+
+      - name: Enforce FASTBuild cache limit (4 GB)
+        run: |
+          $dir = '${{ steps.fbcache.outputs.path }}'
+          if (Test-Path $dir) {
+            $bytes = (Get-ChildItem $dir -Recurse -File -ErrorAction SilentlyContinue |
+                      Measure-Object Length -Sum).Sum
+            $sizeMB = [math]::Round($bytes / 1MB)
+            Write-Host "FASTBuild cache size: $sizeMB MB"
+            if ($bytes -gt 4GB) {
+              Write-Host '::warning::FASTBuild cache exceeds 4 GB - purging'
+              Remove-Item "$dir\*" -Recurse -Force
+            }
+          }
+
       - name: Configure (CMake)
         env:
           CC: clang-cl
@@ -102,3 +131,7 @@ jobs:
       - name: Run tests
         run: ctest --test-dir build/ci --output-on-failure
 
+      - name: Trim FASTBuild cache
+        if: always()
+        run: FBuild.exe -cachetrim 10240
+        working-directory: ${{ github.workspace }}/build/ci
