@@ -10,10 +10,6 @@
       "name": "base",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {
-          "type": "FILEPATH",
-          "value": "$penv{GLOBAL_VCPKG_PATH}/scripts/buildsystems/vcpkg.cmake"
-        },
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "USE_WERROR": true
       },
@@ -38,13 +34,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
-        "VCPKG_TARGET_TRIPLET": "x64-windows",
         "CMAKE_MSVC_DEBUG_INFORMATION_FORMAT": "Embedded"
-      },
-      "vendor": {
-        "arcvideo-editor.org": {
-          "vcpkgTriplet": "x64-windows"
-        }
       }
     },
     {
@@ -100,13 +90,7 @@
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl",
-        "VCPKG_TARGET_TRIPLET": "x64-windows",
         "CMAKE_MSVC_DEBUG_INFORMATION_FORMAT": "Embedded"
-      },
-      "vendor": {
-        "arcvideo-editor.org": {
-          "vcpkgTriplet": "x64-windows"
-        }
       }
     },
     {
@@ -130,15 +114,8 @@
         "FASTBUILD_CACHE_PATH": "/cache/fastbuild"
       },
       "cacheVariables": {
-        "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
-        "VCPKG_HOST_TRIPLET": "x64-linux-dynamic",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
-      },
-      "vendor": {
-        "arcvideo-editor.org": {
-          "vcpkgTriplet": "x64-linux-dynamic"
-        }
       }
     },
     {
