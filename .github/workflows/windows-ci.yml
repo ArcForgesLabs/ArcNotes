@@ -1,0 +1,104 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+    name: Windows x64 (FASTBuild)
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install CMake (Scoop)
+        uses: MinoruSekine/setup-scoop@v4
+        with:
+          apps: cmake
+
+      - name: Install FASTBuild
+        run: |
+          $url = 'https://www.fastbuild.org/downloads/v1.19/FASTBuild-Windows-x64-v1.19.zip'
+          $zip = Join-Path $env:RUNNER_TEMP 'fastbuild.zip'
+          $dest = Join-Path $env:RUNNER_TEMP 'fastbuild'
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath $dest -Force
+          $dest >> $env:GITHUB_PATH
+          Write-Host "FASTBuild installed to $dest"
+
+      - name: Setup MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          vsversion: '18.0'
+
+      - name: Remove MinGW from PATH
+        run: |
+          $clean = ($env:PATH -split ';' | Where-Object { $_ -notmatch 'mingw' }) -join ';'
+          "PATH=$clean" >> $env:GITHUB_ENV
+
+      - name: Install Qt 6.10.2
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          cache: true
+          setup-python: false
+
+      - name: Export Qt6_DIR
+        run: |
+          $qt6Dir = Join-Path $env:QT_ROOT_DIR 'lib\cmake\Qt6'
+          if (-not (Test-Path $qt6Dir)) {
+            throw "Qt6Config.cmake not found under $qt6Dir"
+          }
+          "Qt6_DIR=$qt6Dir" >> $env:GITHUB_ENV
+          Write-Host "Qt6_DIR=$qt6Dir"
+
+      - name: Verify tool versions
+        run: |
+          Write-Host "CMake: $(cmake --version | Select-Object -First 1)"
+          Write-Host "CL:    $(cl 2>&1 | Select-Object -First 1)"
+          FBuild.exe -version
+          Write-Host "Qt6_DIR: $env:Qt6_DIR"
+
+      - name: Detect Windows SDK (rc.exe for FASTBuild)
+        run: |
+          $rc = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter rc.exe |
+                Where-Object { $_.FullName -match '\\x64\\' } |
+                Sort-Object FullName |
+                Select-Object -Last 1
+          if (-not $rc) { throw 'rc.exe not found in Windows SDK' }
+          Write-Host "Found rc.exe -> $($rc.DirectoryName)"
+          "WindowsKitRC=$($rc.DirectoryName)" >> $env:GITHUB_ENV
+          $rc.DirectoryName >> $env:GITHUB_PATH
+
+      - name: Configure (CMake)
+        env:
+          CC: clang-cl
+          CXX: clang-cl
+        run: cmake --preset windows-ci -DUSE_WERROR=ON
+
+      - name: Build (FASTBuild)
+        run: cmake --build --preset ci
+
+      - name: Run tests
+        run: ctest --test-dir build/ci --output-on-failure
+

@@ -1,0 +1,109 @@
+name: Linux CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Linux x64 (FASTBuild)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 6
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install system dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            clang lld ninja-build curl wget unzip xvfb \
+            libgl-dev libx11-dev libxkbcommon-dev libxcb-cursor-dev \
+            libfontconfig1-dev libfreetype-dev libegl-dev \
+            '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev \
+            libxrender-dev libxi-dev libxkbcommon-x11-dev libegl1-mesa-dev \
+            libsm-dev libice-dev
+
+      - name: Install CMake 4.2.3
+        run: |
+          wget -qO- https://github.com/Kitware/CMake/releases/download/v4.2.3/cmake-4.2.3-linux-x86_64.tar.gz \
+            | tar -xz -C /tmp
+          echo "/tmp/cmake-4.2.3-linux-x86_64/bin" >> "$GITHUB_PATH"
+
+      - name: Install FASTBuild v1.19
+        run: |
+          mkdir -p /tmp/fastbuild
+          wget -O /tmp/fastbuild.zip \
+            https://www.fastbuild.org/downloads/v1.19/FASTBuild-Linux-x64-v1.19.zip
+          unzip -o /tmp/fastbuild.zip -d /tmp/fastbuild
+          chmod +x /tmp/fastbuild/fbuild /tmp/fastbuild/fbuildworker
+          ln -sf /tmp/fastbuild/fbuild /tmp/fastbuild/FBuild
+          echo "/tmp/fastbuild" >> "$GITHUB_PATH"
+
+      - name: Prepare FASTBuild cache path
+        run: |
+          sudo mkdir -p /cache/fastbuild
+          sudo chown "$USER":"$USER" /cache/fastbuild
+
+      - name: Install Qt 6.10.2
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.10.2'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          cache: true
+          setup-python: false
+          install-deps: false
+
+      - name: Export Qt6_DIR
+        run: |
+          set -euo pipefail
+          qt6_dir="${QT_ROOT_DIR}/lib/cmake/Qt6"
+          test -f "${qt6_dir}/Qt6Config.cmake"
+          echo "Qt6_DIR=${qt6_dir}" >> "$GITHUB_ENV"
+          echo "Qt6_DIR=${qt6_dir}"
+
+      - name: Verify tool versions
+        run: |
+          echo "CMake:  $(cmake --version | head -1)"
+          echo "Clang:  $(clang++ --version | head -1)"
+          echo "FBuild: $(fbuild -version 2>&1 | head -1)"
+          echo "Qt6_DIR: ${Qt6_DIR}"
+
+      - name: Configure (CMake)
+        run: cmake --preset linux-ci -DUSE_WERROR=ON
+
+      - name: Build (FASTBuild)
+        run: cmake --build --preset linux-ci
+
+      - name: Run tests
+        run: ctest --test-dir build/linux-ci --output-on-failure
+
+      - name: Launch smoke test
+        run: |
+          set +e
+          QT_QPA_PLATFORM=offscreen timeout 5s ./build/linux-ci/notes
+          status=$?
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
+            echo "notes exited with unexpected status: $status"
+            exit "$status"
+          fi
+          exit 0
