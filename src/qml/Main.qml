@@ -141,7 +141,8 @@ ApplicationWindow {
 
         if (anchorItem) {
             var pos = anchorItem.mapToItem(root.contentItem, 0, anchorItem.height + 4)
-            editorSettingsPopup.x = Math.max(12, Math.round(pos.x - editorSettingsPopup.width + anchorItem.width))
+            var popupWidth = editorSettingsPopup.width > 0 ? editorSettingsPopup.width : editorSettingsContent.width
+            editorSettingsPopup.x = Math.max(12, Math.round(pos.x - popupWidth + anchorItem.width))
             editorSettingsPopup.y = Math.round(pos.y)
         }
 
@@ -343,12 +344,15 @@ ApplicationWindow {
     Popup {
         id: editorSettingsPopup
         parent: Overlay.overlay
+        width: editorSettingsContent.width
+        height: editorSettingsContent.height
         x: root.width - width - 20
         y: 72
         padding: 0
         modal: false
         focus: true
         z: 1000
+        clip: false
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
         background: Rectangle {
             color: "transparent"
@@ -357,6 +361,7 @@ ApplicationWindow {
         onClosed: Notes.AppBackend.setEditorSettingsFromQuickViewVisibility(false)
 
         contentItem: EditorSettings {
+            id: editorSettingsContent
             extraWidthPadding: 0
             extraHeightPadding: 0
         }
