@@ -637,6 +637,8 @@ ApplicationWindow {
                         ToolGlyphButton {
                             glyph: Notes.AppBackend.folderTreeCollapsed ? root.iconMaterialPaneClosed : root.iconMaterialPaneOpen
                             fontFamily: fontIconLoader.mt_symbols
+                            buttonWidth: 33
+                            buttonHeight: 35
                             pointSize: Notes.AppBackend.platformName === "Apple" ? 21 : 18
                             onClicked: Notes.AppBackend.folderTreeCollapsed ? Notes.AppBackend.expandFolderTree()
                                                                             : Notes.AppBackend.collapseFolderTree()
@@ -760,6 +762,8 @@ ApplicationWindow {
                         ToolGlyphButton {
                             glyph: root.iconPlus
                             fontFamily: fontIconLoader.fa_solid
+                            buttonWidth: 33
+                            buttonHeight: 25
                             pointSize: Notes.AppBackend.platformName === "Apple" ? 18 : 13
                             enabled: Notes.AppBackend.canCreateNotes
                             onClicked: Notes.AppBackend.createNewNote()
@@ -897,8 +901,8 @@ ApplicationWindow {
                             fontFamily: fontIconLoader.mt_symbols
                             pointSize: Notes.AppBackend.platformName === "Apple" ? 20 : 17
                             glyphColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
-                            enabled: !Notes.AppBackend.kanbanVisible
-                            hoverEnabled: !Notes.AppBackend.kanbanVisible
+                            enabled: Notes.AppBackend.kanbanVisible
+                            hoverEnabled: Notes.AppBackend.kanbanVisible
                             onClicked: Notes.AppBackend.setKanbanVisibility(false)
                         }
 
@@ -918,7 +922,7 @@ ApplicationWindow {
                         }
 
                         Item {
-                            Layout.fillWidth: true
+                            Layout.preferredWidth: 40
                         }
 
                         Text {
@@ -932,7 +936,7 @@ ApplicationWindow {
                         }
 
                         Item {
-                            Layout.fillWidth: true
+                            Layout.preferredWidth: 40
                         }
 
                         ToolGlyphButton {
@@ -1025,6 +1029,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.preferredHeight: tagRepeater.count > 0 && !Notes.AppBackend.kanbanVisible ? 33 : 0
                     color: root.headerBackground
+                    Layout.maximumHeight: 80
                     visible: height > 0
 
                     Flickable {
