@@ -12,6 +12,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QWindow>
@@ -45,6 +46,7 @@ void notes_message_handler(QtMsgType type, const QMessageLogContext& context, co
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    QQuickStyle::setStyle(QStringLiteral("Material"));
     QGuiApplication app(argc, argv);
     qSetMessagePattern(QStringLiteral("[%{time yyyy-MM-dd hh:mm:ss.zzz}] [%{type}] [%{category}] %{message}"));
     qInstallMessageHandler(notes_message_handler);
