@@ -50,6 +50,10 @@ ApplicationWindow {
     readonly property string iconMaterialPaneOpen: "\uec73"
     readonly property string iconMaterialPaneClosed: "\ue31c"
 
+    function isAllNotesContext() {
+        return !Notes.AppBackend.currentContextIsTrash && !Notes.AppBackend.currentContextIsTag && Notes.AppBackend.listLabel1 === "All Notes"
+    }
+
     function cleanTextLine(line) {
         if (line === undefined || line === null) {
             return ""
@@ -83,6 +87,34 @@ ApplicationWindow {
         }
 
         return parentName ? parentName : qsTr("No additional text")
+    }
+
+    function noteDateText(noteDateTime) {
+        if (!noteDateTime) {
+            return ""
+        }
+
+        var currentDate = new Date()
+        var noteDate = new Date(noteDateTime)
+        if (isNaN(noteDate.getTime())) {
+            return ""
+        }
+
+        var dayMs = 24 * 60 * 60 * 1000
+        var noteDay = new Date(noteDate.getFullYear(), noteDate.getMonth(), noteDate.getDate())
+        var currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+        var dayDiff = Math.round((currentDay.getTime() - noteDay.getTime()) / dayMs)
+
+        if (dayDiff === 0) {
+            return Qt.formatTime(noteDate, "h:mm AP")
+        }
+        if (dayDiff === 1) {
+            return qsTr("Yesterday")
+        }
+        if (dayDiff >= 2 && dayDiff <= 7) {
+            return Qt.locale("en_US").dayName(noteDate.getDay(), Locale.LongFormat)
+        }
+        return Qt.formatDate(noteDate, "M/d/yy")
     }
 
     function treeIconText(itemType) {
@@ -437,6 +469,37 @@ ApplicationWindow {
         color: root.edgeColor
     }
 
+    component NoteSectionHeader: Item {
+        id: sectionRoot
+        property string text: ""
+        property bool collapsible: false
+
+        implicitHeight: 25
+        implicitWidth: parent ? parent.width : 0
+
+        Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 8
+            anchors.verticalCenter: parent.verticalCenter
+            text: sectionRoot.text
+            color: root.mutedColor
+            font.family: Notes.AppBackend.displayFontFamily
+            font.pointSize: 10
+            font.bold: true
+        }
+
+        Text {
+            visible: sectionRoot.collapsible
+            anchors.right: parent.right
+            anchors.rightMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            text: fontIconLoader.icons.fa_chevron_down
+            font.family: fontIconLoader.fa_solid
+            font.pointSize: 8
+            color: root.accentColor
+        }
+    }
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
@@ -511,7 +574,7 @@ ApplicationWindow {
                             required property bool expanded
                             required property var model
                             width: treeView.width
-                            implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 28 : 24
+                            implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 25 : 25
 
                             Rectangle {
                                 anchors.fill: parent
@@ -572,7 +635,7 @@ ApplicationWindow {
                                     text: treeDelegate.model.displayText ? treeDelegate.model.displayText : ""
                                     color: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4 ? root.mutedColor : root.titleColor
                                     font.family: Notes.AppBackend.displayFontFamily
-                                    font.pointSize: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4 ? 10 : 11
+                                    font.pointSize: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4 ? 10 : 10
                                     font.bold: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
                                     elide: Text.ElideRight
                                 }
@@ -787,19 +850,48 @@ ApplicationWindow {
                             id: noteDelegate
                             required property var model
                             required property int index
+                            property bool hovered: false
+                            property bool selected: noteDelegate.model.noteId === Notes.AppBackend.noteEditor.currentNoteId
+                            property bool showPinnedHeader: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.noteRowStartsPinnedSection(noteDelegate.index)
+                            property bool showNotesHeader: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.noteListHasPinnedNotes() && Notes.AppBackend.noteRowStartsNotesSection(noteDelegate.index)
+                            property bool showFolderName: root.isAllNotesContext() && noteDelegate.model.noteParentName
+                            property int cardHeight: showFolderName ? 88 : 68
                             width: noteList.width
-                            height: 68
+                            height: cardHeight + (showPinnedHeader ? 25 : 0) + (showNotesHeader ? 35 : 0)
+
+                            NoteSectionHeader {
+                                id: pinnedHeader
+                                visible: noteDelegate.showPinnedHeader
+                                width: parent.width
+                                text: qsTr("Pinned")
+                                collapsible: true
+                            }
+
+                            NoteSectionHeader {
+                                id: notesHeader
+                                visible: noteDelegate.showNotesHeader
+                                y: noteDelegate.showPinnedHeader ? 25 : 10
+                                width: parent.width
+                                text: qsTr("Notes")
+                            }
 
                             Rectangle {
-                                anchors.fill: parent
-                                color: noteDelegate.model.noteId === Notes.AppBackend.noteEditor.currentNoteId ? root.selectedColor : "transparent"
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.topMargin: (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0)
+                                height: noteDelegate.cardHeight
+                                color: noteDelegate.selected ? root.selectedColor : noteDelegate.hovered ? root.hoverBackground : root.noteCardBackground
                             }
 
                             Column {
-                                anchors.fill: parent
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.topMargin: (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0) + 8
+                                anchors.bottom: parent.bottom
                                 anchors.leftMargin: 12
                                 anchors.rightMargin: 10
-                                anchors.topMargin: 8
                                 spacing: 2
 
                                 RowLayout {
@@ -812,7 +904,7 @@ ApplicationWindow {
                                         color: root.titleColor
                                         font.family: Notes.AppBackend.displayFontFamily
                                         font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 10
-                                        font.bold: true
+                                        font.bold: !noteDelegate.selected
                                         elide: Text.ElideRight
                                     }
 
@@ -827,7 +919,7 @@ ApplicationWindow {
 
                                 Text {
                                     width: parent.width
-                                    text: noteDelegate.model.noteLastModificationDateTime ? noteDelegate.model.noteLastModificationDateTime.toLocaleTimeString(Qt.locale(), Locale.ShortFormat) : ""
+                                    text: root.noteDateText(noteDelegate.model.noteLastModificationDateTime)
                                     color: root.titleColor
                                     font.family: Notes.AppBackend.displayFontFamily
                                     font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
@@ -844,6 +936,41 @@ ApplicationWindow {
                                     font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
                                     elide: Text.ElideRight
                                 }
+
+                                RowLayout {
+                                    visible: noteDelegate.showFolderName
+                                    width: parent.width
+                                    spacing: 4
+
+                                    Image {
+                                        source: "qrc:/images/folder.png"
+                                        sourceSize.width: 16
+                                        sourceSize.height: 16
+                                        fillMode: Image.PreserveAspectFit
+                                        Layout.preferredWidth: 16
+                                        Layout.preferredHeight: 16
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: noteDelegate.model.noteParentName ? noteDelegate.model.noteParentName : ""
+                                        color: root.mutedColor
+                                        font.family: Notes.AppBackend.displayFontFamily
+                                        font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
+                                        elide: Text.ElideRight
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+                                height: 1
+                                color: root.edgeColor
+                                visible: noteDelegate.index < noteList.count - 1
                             }
 
                             TapHandler {
@@ -858,6 +985,10 @@ ApplicationWindow {
                                     var pos = eventPoint.position
                                     root.openNoteContextMenu(noteDelegate, pos.x, pos.y)
                                 }
+                            }
+
+                            HoverHandler {
+                                onHoveredChanged: noteDelegate.hovered = hovered
                             }
                         }
                     }
@@ -925,14 +1056,19 @@ ApplicationWindow {
                             Layout.preferredWidth: 40
                         }
 
-                        Text {
-                            text: Notes.AppBackend.noteEditor.currentNoteId === -1 ? "" : Notes.AppBackend.noteEditor.editorDateLabel
-                            color: root.mutedColor
-                            font.family: Notes.AppBackend.displayFontFamily
-                            font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 9
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
+                        Item {
+                            Layout.fillWidth: true
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: Notes.AppBackend.noteEditor.currentNoteId === -1 ? "" : Notes.AppBackend.noteEditor.editorDateLabel
+                                color: root.mutedColor
+                                font.family: Notes.AppBackend.displayFontFamily
+                                font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 9
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
                         }
 
                         Item {
@@ -1027,7 +1163,7 @@ ApplicationWindow {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: tagRepeater.count > 0 && !Notes.AppBackend.kanbanVisible ? 33 : 0
+                    Layout.preferredHeight: tagFlow.children.length > 0 && !Notes.AppBackend.kanbanVisible ? Math.min(80, Math.max(33, tagFlow.implicitHeight + 10)) : 0
                     color: root.headerBackground
                     Layout.maximumHeight: 80
                     visible: height > 0
@@ -1036,15 +1172,15 @@ ApplicationWindow {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         anchors.rightMargin: 10
-                        contentWidth: tagRow.width
-                        contentHeight: parent.height
+                        contentWidth: width
+                        contentHeight: tagFlow.implicitHeight
                         clip: true
-                        flickableDirection: Flickable.HorizontalFlick
+                        flickableDirection: Flickable.VerticalFlick
 
-                        Row {
-                            id: tagRow
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 8
+                        Flow {
+                            id: tagFlow
+                            width: parent.width
+                            spacing: 5
 
                             Repeater {
                                 id: tagRepeater
@@ -1054,18 +1190,32 @@ ApplicationWindow {
                                     id: tagDelegate
                                     required property var model
                                     radius: 10
-                                    color: tagDelegate.model.tagColor ? tagDelegate.model.tagColor : root.accentColor
-                                    opacity: 0.16
+                                    color: root.darkTheme ? "#4c5561" : "#daeaf8"
                                     implicitHeight: 20
-                                    implicitWidth: tagLabel.implicitWidth + 16
+                                    implicitWidth: 5 + 12 + 5 + tagLabel.implicitWidth + 7
+
+                                    Rectangle {
+                                        width: 12
+                                        height: 12
+                                        radius: 6
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 5
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: tagDelegate.model.tagColor ? tagDelegate.model.tagColor : root.accentColor
+                                    }
 
                                     Text {
                                         id: tagLabel
-                                        anchors.centerIn: parent
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 22
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 7
+                                        anchors.verticalCenter: parent.verticalCenter
                                         text: tagDelegate.model.tagName ? tagDelegate.model.tagName : ""
                                         color: root.titleColor
                                         font.family: Notes.AppBackend.displayFontFamily
                                         font.pointSize: 9
+                                        verticalAlignment: Text.AlignVCenter
                                     }
                                 }
                             }

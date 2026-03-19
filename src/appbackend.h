@@ -88,6 +88,9 @@ public:
     Q_INVOKABLE void publishState();
     Q_INVOKABLE void activateTreeItem(int itemType, int nodeId);
     Q_INVOKABLE void selectNoteRow(int row);
+    Q_INVOKABLE bool noteListHasPinnedNotes() const;
+    Q_INVOKABLE bool noteRowStartsPinnedSection(int row) const;
+    Q_INVOKABLE bool noteRowStartsNotesSection(int row) const;
     Q_INVOKABLE void createNewNote();
     Q_INVOKABLE void moveCurrentNoteToTrash();
     Q_INVOKABLE void restoreCurrentNote();

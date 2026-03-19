@@ -300,6 +300,24 @@ void AppBackend::selectNoteRow(int row) {
     selectNoteIndex(m_noteModel->index(row, 0));
 }
 
+bool AppBackend::noteListHasPinnedNotes() const {
+    return m_noteModel != nullptr && m_noteModel->hasPinnedNote();
+}
+
+bool AppBackend::noteRowStartsPinnedSection(int row) const {
+    if (m_noteModel == nullptr || row < 0) {
+        return false;
+    }
+    return m_noteModel->isFirstPinnedNote(m_noteModel->index(row, 0));
+}
+
+bool AppBackend::noteRowStartsNotesSection(int row) const {
+    if (m_noteModel == nullptr || row < 0) {
+        return false;
+    }
+    return m_noteModel->isFirstUnpinnedNote(m_noteModel->index(row, 0));
+}
+
 void AppBackend::createNewNote() {
     if (!canCreateNotes() || m_noteModel == nullptr) {
         return;
