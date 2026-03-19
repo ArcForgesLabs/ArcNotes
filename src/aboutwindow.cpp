@@ -7,8 +7,8 @@
 #include <QScrollBar>
 #include <sstream>
 
-#include "editorsettingsoptions.h"
 #include "ui_aboutwindow.h"
+#include "widgetstyleutils.h"
 
 /**
  * Initializes the window components and configures the AboutWindow

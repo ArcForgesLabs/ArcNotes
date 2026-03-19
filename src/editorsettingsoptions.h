@@ -1,11 +1,10 @@
 #ifndef EDITORSETTINGSOPTIONS_H
 #define EDITORSETTINGSOPTIONS_H
 
-#include <QtQml/qqml.h>
+#include <iosfwd>
+#include <string>
 
 #include <QObject>
-#include <QString>
-#include <QWidget>
 
 #include "lqtutils_enum.h"
 
@@ -26,8 +25,5 @@ std::ostream& operator<<(std::ostream& os, const Theme::Value& theme);
 std::ostream& operator<<(std::ostream& os, const FontTypeface::Value& fontTypeface);
 std::string to_string(FontTypeface::Value fontTypeface);
 std::string to_string(Theme::Value theme);
-
-void setCSSThemeAndUpdate(QWidget* obj, Theme::Value theme);
-void setCSSClassesAndUpdate(QWidget* obj, const std::string& classNames);
 
 #endif

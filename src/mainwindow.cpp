@@ -34,6 +34,7 @@
 #include "tagpool.h"
 #include "treeviewlogic.h"
 #include "ui_mainwindow.h"
+#include "widgetstyleutils.h"
 
 #define DEFAULT_DATABASE_NAME "default_database"
 

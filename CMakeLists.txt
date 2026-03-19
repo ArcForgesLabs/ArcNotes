@@ -245,6 +245,7 @@ endif()
 
 if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
   set(QML_FILES
+      src/qml/AboutDialog.qml
       src/qml/CheckBoxMaterial.qml
       src/qml/CustomHorizontalScrollBar.qml
       src/qml/CustomTextArea.qml
@@ -265,6 +266,7 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
       src/qml/ThemeChooserButton.qml
       src/qml/TodoColumnDelegate.qml
       src/qml/TodoTaskDelegate.qml
+      src/qml/UpdaterDialog.qml
       src/qml/Utilities.js
       src/qml/ViewChooserButton.qml
       src/qml/kanbanMain.qml)
@@ -329,8 +331,7 @@ target_link_libraries(
          Qt${QT_VERSION_MAJOR}::Qml
          Qt${QT_VERSION_MAJOR}::Sql
          Qt${QT_VERSION_MAJOR}::Quick
-         Qt${QT_VERSION_MAJOR}::QuickControls2
-         Qt${QT_VERSION_MAJOR}::Widgets)
+         Qt${QT_VERSION_MAJOR}::QuickControls2)
 
 if(APPLE)
   set(COPYRIGHT_TEXT

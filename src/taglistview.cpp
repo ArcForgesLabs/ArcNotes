@@ -4,6 +4,8 @@
 #include <QFile>
 #include <QMouseEvent>
 
+#include "widgetstyleutils.h"
+
 TagListView::TagListView(QWidget* parent) : QListView(parent) {
     setFlow(QListView::LeftToRight);
     setSpacing(3);

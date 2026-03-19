@@ -4,8 +4,6 @@
 #include <QString>
 #include <QtTest>
 
-#include "mainwindow.h"
-
 class tst_MainWindow : public QObject {
     Q_OBJECT
 

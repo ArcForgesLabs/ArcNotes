@@ -11,6 +11,7 @@
 
 #include "nodetreemodel.h"
 #include "nodetreeview_p.h"
+#include "widgetstyleutils.h"
 
 NodeTreeView::NodeTreeView(QWidget* parent)
     : QTreeView(parent),

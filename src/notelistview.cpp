@@ -18,6 +18,7 @@
 
 #include "dbmanager.h"
 #include "fontloader.h"
+#include "widgetstyleutils.h"
 #include "nodepath.h"
 #include "notelistdelegate.h"
 #include "notelistdelegateeditor.h"
