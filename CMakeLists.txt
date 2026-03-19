@@ -201,7 +201,9 @@ elseif(WIN32)
 endif()
 
 add_executable(${APP_TARGET} WIN32 MACOSX_BUNDLE ${SOURCES}
-                                                 ${SOURCES_3RD_PARTY})
+                                                 ${SOURCES_3RD_PARTY}
+                                                 ${QML_CXX_SOURCES}
+                                                 )
 
 target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src
                                                ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit)
