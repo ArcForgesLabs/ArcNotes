@@ -1,15 +1,16 @@
 #ifndef APPBACKEND_H
 #define APPBACKEND_H
 
+#include <QtQml/qqmlregistration.h>
+
 #include <QAbstractItemModel>
 #include <QJsonObject>
 #include <QObject>
 #include <QSet>
 #include <QSettings>
-#include <QTimer>
 #include <QThread>
+#include <QTimer>
 #include <QUrl>
-#include <QtQml/qqmlregistration.h>
 
 #include "dbmanager.h"
 #include "editorsettingsoptions.h"

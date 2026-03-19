@@ -1,12 +1,13 @@
 #include "noteeditorbackend.h"
 
+#include <QtQuick/qquicktextdocument.h>
+
 #include <QColor>
 #include <QDateTime>
 #include <QLocale>
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextStream>
-#include <QtQuick/qquicktextdocument.h>
 
 #include "custommarkdownhighlighter.h"
 #include "dbmanager.h"
@@ -299,8 +300,7 @@ bool NoteEditorBackend::checkForTasksInEditor() {
             const int indexOfTaskInLine = taskDataInLine["taskMatchIndex"];
             if (indexOfTaskInLine != -1) {
                 QJsonObject taskObject;
-                const QString taskText =
-                    line.mid(indexOfTaskInLine + taskDataInLine["taskExpressionSize"]).trimmed();
+                const QString taskText = line.mid(indexOfTaskInLine + taskDataInLine["taskExpressionSize"]).trimmed();
                 taskObject["text"] = taskText;
                 taskObject["checked"] = taskDataInLine["taskChecked"] == 1;
                 taskObject["taskStartLine"] = i;
@@ -570,7 +570,8 @@ void NoteEditorBackend::attachTextDocument(QObject* textDocumentObject) {
     }
 
     if (m_highlighter == nullptr) {
-        m_highlighter = new CustomMarkdownHighlighter(m_attachedTextDocument, MarkdownHighlighter::HighlightingOption::None);
+        m_highlighter =
+            new CustomMarkdownHighlighter(m_attachedTextDocument, MarkdownHighlighter::HighlightingOption::None);
     } else {
         m_highlighter->setDocument(m_attachedTextDocument);
     }

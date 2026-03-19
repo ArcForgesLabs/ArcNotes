@@ -1,10 +1,9 @@
 #ifndef EDITORSETTINGSOPTIONS_H
 #define EDITORSETTINGSOPTIONS_H
 
+#include <QObject>
 #include <iosfwd>
 #include <string>
-
-#include <QObject>
 
 #include "lqtutils_enum.h"
 

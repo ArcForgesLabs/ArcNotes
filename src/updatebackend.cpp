@@ -194,9 +194,9 @@ void UpdateBackend::onDownloadProgress(qint64 received, qint64 total) {
     if (total > 0) {
         m_progressIndeterminate = false;
         m_progressValue = static_cast<double>(received * 100) / static_cast<double>(total);
-        m_downloadLabelText = tr("Downloading updates") + QStringLiteral(" (%1 %2 %3)")
-                                                             .arg(formatDataSize(received), tr("of"),
-                                                                  formatDataSize(total));
+        m_downloadLabelText =
+            tr("Downloading updates") +
+            QStringLiteral(" (%1 %2 %3)").arg(formatDataSize(received), tr("of"), formatDataSize(total));
         m_timeRemainingText = QStringLiteral("%1: %2").arg(tr("Time remaining"), formatTimeRemaining(received, total));
     } else {
         m_progressIndeterminate = true;
@@ -232,8 +232,7 @@ void UpdateBackend::onDownloadFinished() {
     }
 
     if (networkError != QNetworkReply::NoError) {
-        showFailureState(tr("Download failed"),
-                         tr("Could not download the update package: %1").arg(errorString), true);
+        showFailureState(tr("Download failed"), tr("Could not download the update package: %1").arg(errorString), true);
         return;
     }
 

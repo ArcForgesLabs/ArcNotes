@@ -1,7 +1,7 @@
 #include "appbackend.h"
 
-#include <QCoreApplication>
 #include <QColor>
+#include <QCoreApplication>
 #include <QDir>
 #include <QFile>
 #include <QFont>
@@ -16,8 +16,8 @@
 
 #include "nodepath.h"
 #include "nodetreemodel.h"
-#include "notelistmodel.h"
 #include "noteeditorbackend.h"
+#include "notelistmodel.h"
 #include "tagpool.h"
 
 namespace {
@@ -83,7 +83,7 @@ AppBackend::AppBackend(QObject* parent)
 #else
           13
 #endif
-      ),
+          ),
       m_textColumnWidth(720),
       m_selectedNoteId(INVALID_NODE_ID),
       m_initialWindowWidth(WINDOW_WIDTH_DEFAULT),
@@ -278,8 +278,8 @@ void AppBackend::activateTreeItem(int itemType, int nodeId) {
             break;
         case NodeItem::FolderItem: {
             NodeData folder;
-            QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, folder),
-                                      Q_ARG(int, nodeId));
+            QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
+                                      Q_RETURN_ARG(NodeData, folder), Q_ARG(int, nodeId));
             saveTreeSelection(true, folder.absolutePath(), {});
             openFolderContext(nodeId, false);
             break;
@@ -318,10 +318,12 @@ void AppBackend::createNewNote() {
         QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, parent),
                                   Q_ARG(int, folderId));
         tmpNote.setParentId(parent.nodeType() == NodeData::Type::Folder ? parent.id() : DEFAULT_NOTES_FOLDER_ID);
-        tmpNote.setParentName(parent.nodeType() == NodeData::Type::Folder ? parent.fullTitle() : QStringLiteral("Notes"));
+        tmpNote.setParentName(parent.nodeType() == NodeData::Type::Folder ? parent.fullTitle()
+                                                                          : QStringLiteral("Notes"));
 
         int noteId = INVALID_NODE_ID;
-        QMetaObject::invokeMethod(m_dbManager, "nextAvailableNodeId", Qt::BlockingQueuedConnection, Q_RETURN_ARG(int, noteId));
+        QMetaObject::invokeMethod(m_dbManager, "nextAvailableNodeId", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(int, noteId));
         tmpNote.setId(noteId);
         tmpNote.setIsTempNote(true);
         if (m_listViewInfo.isInTag) {
@@ -366,8 +368,8 @@ void AppBackend::restoreCurrentNote() {
     }
 
     NodeData defaultNotesFolder;
-    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, defaultNotesFolder),
-                              Q_ARG(int, DEFAULT_NOTES_FOLDER_ID));
+    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(NodeData, defaultNotesFolder), Q_ARG(int, DEFAULT_NOTES_FOLDER_ID));
     QMetaObject::invokeMethod(m_dbManager, "moveNode", Qt::QueuedConnection, Q_ARG(int, note.id()),
                               Q_ARG(NodeData, defaultNotesFolder));
 
@@ -519,7 +521,8 @@ void AppBackend::setTheme(Theme::Value theme) {
         return;
     }
     m_currentTheme = theme;
-    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme), m_editorMediumFontSize);
+    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme),
+                                          m_editorMediumFontSize);
     saveEditorSettings();
     emitThemeState();
     emitSettingsState();
@@ -599,8 +602,10 @@ void AppBackend::stayOnTop(bool checked) {
 
 void AppBackend::showEditorSettings() {
     m_editorSettingsVisible = true;
-    QJsonObject dataToSendToView{{"parentWindowHeight", m_parentWindowHeight}, {"parentWindowWidth", m_parentWindowWidth},
-                                 {"parentWindowX", m_parentWindowX}, {"parentWindowY", m_parentWindowY}};
+    QJsonObject dataToSendToView{{"parentWindowHeight", m_parentWindowHeight},
+                                 {"parentWindowWidth", m_parentWindowWidth},
+                                 {"parentWindowX", m_parentWindowX},
+                                 {"parentWindowY", m_parentWindowY}};
     emit editorSettingsShowed(QVariant(dataToSendToView));
 }
 
@@ -918,12 +923,10 @@ void AppBackend::setupSettings() {
     const QRect screenGeometry = screen != nullptr ? screen->availableGeometry() : QRect(0, 0, 1600, 900);
     m_initialWindowWidth = m_settings->value(QStringLiteral("windowWidth"), WINDOW_WIDTH_DEFAULT).toInt();
     m_initialWindowHeight = m_settings->value(QStringLiteral("windowHeight"), WINDOW_HEIGHT_DEFAULT).toInt();
-    m_initialWindowX = m_settings->value(QStringLiteral("windowX"),
-                                         screenGeometry.center().x() - (m_initialWindowWidth / 2))
-                           .toInt();
-    m_initialWindowY = m_settings->value(QStringLiteral("windowY"),
-                                         screenGeometry.center().y() - (m_initialWindowHeight / 2))
-                           .toInt();
+    m_initialWindowX =
+        m_settings->value(QStringLiteral("windowX"), screenGeometry.center().x() - (m_initialWindowWidth / 2)).toInt();
+    m_initialWindowY =
+        m_settings->value(QStringLiteral("windowY"), screenGeometry.center().y() - (m_initialWindowHeight / 2)).toInt();
     m_parentWindowWidth = m_initialWindowWidth;
     m_parentWindowHeight = m_initialWindowHeight;
     m_parentWindowX = m_initialWindowX;
@@ -941,7 +944,8 @@ void AppBackend::setupSettings() {
 
     m_editorMediumFontSize = m_settings->value(QStringLiteral("editorMediumFontSize"), m_editorMediumFontSize).toInt();
     m_textFullWidth = m_settings->value(QStringLiteral("isTextFullWidth"), false).toBool();
-    m_charsLimitPerFont.mono = m_settings->value(QStringLiteral("charsLimitPerFontMono"), m_charsLimitPerFont.mono).toInt();
+    m_charsLimitPerFont.mono =
+        m_settings->value(QStringLiteral("charsLimitPerFontMono"), m_charsLimitPerFont.mono).toInt();
     m_charsLimitPerFont.serif =
         m_settings->value(QStringLiteral("charsLimitPerFontSerif"), m_charsLimitPerFont.serif).toInt();
     m_charsLimitPerFont.sansSerif =
@@ -981,10 +985,12 @@ void AppBackend::setupSettings() {
     m_folderTreeCollapsed = m_settings->value(QStringLiteral("isTreeCollapsed"), false).toBool();
     m_noteListCollapsed = m_settings->value(QStringLiteral("isNoteListCollapsed"), false).toBool();
     m_alwaysOnTop = m_settings->value(QStringLiteral("alwaysStayOnTop"), false).toBool();
-    m_editorSettingsScrollBarPosition = m_settings->value(QStringLiteral("editorSettingsScrollBarPosition"), 0.0).toDouble();
+    m_editorSettingsScrollBarPosition =
+        m_settings->value(QStringLiteral("editorSettingsScrollBarPosition"), 0.0).toDouble();
 
     m_restoreIsSelectingFolder = m_settings->value(QStringLiteral("isSelectingFolder"), true).toBool();
-    m_restoreFolderPath = m_settings->value(QStringLiteral("currentSelectFolder"), NodePath::getAllNoteFolderPath()).toString();
+    m_restoreFolderPath =
+        m_settings->value(QStringLiteral("currentSelectFolder"), NodePath::getAllNoteFolderPath()).toString();
 
     const QStringList currentSelectTagsId =
         m_settings->value(QStringLiteral("currentSelectTagsId"), QStringList{}).toStringList();
@@ -1034,7 +1040,8 @@ void AppBackend::setupDatabases() {
             db.setDatabaseName(noteDBFilePath);
             if (db.open()) {
                 QSqlQuery query(db);
-                if (query.exec(QStringLiteral("SELECT name FROM sqlite_master WHERE type='table' AND name='tag_table';")) &&
+                if (query.exec(
+                        QStringLiteral("SELECT name FROM sqlite_master WHERE type='table' AND name='tag_table';")) &&
                     query.next() && query.value(0).toString() == QStringLiteral("tag_table")) {
                     m_needMigrateFromV1_5_0 = false;
                 }
@@ -1097,9 +1104,12 @@ void AppBackend::setupConnections() {
     connect(this, &AppBackend::requestSearchInDb, m_dbManager, &DBManager::searchForNotes, Qt::QueuedConnection);
     connect(this, &AppBackend::requestClearSearchDb, m_dbManager, &DBManager::clearSearch, Qt::QueuedConnection);
     connect(this, &AppBackend::requestRemoveNoteDb, m_dbManager, &DBManager::removeNote, Qt::QueuedConnection);
-    connect(this, &AppBackend::requestImportNotes, m_dbManager, &DBManager::onImportNotesRequested, Qt::QueuedConnection);
-    connect(this, &AppBackend::requestRestoreNotes, m_dbManager, &DBManager::onRestoreNotesRequested, Qt::QueuedConnection);
-    connect(this, &AppBackend::requestExportNotes, m_dbManager, &DBManager::onExportNotesRequested, Qt::QueuedConnection);
+    connect(this, &AppBackend::requestImportNotes, m_dbManager, &DBManager::onImportNotesRequested,
+            Qt::QueuedConnection);
+    connect(this, &AppBackend::requestRestoreNotes, m_dbManager, &DBManager::onRestoreNotesRequested,
+            Qt::QueuedConnection);
+    connect(this, &AppBackend::requestExportNotes, m_dbManager, &DBManager::onExportNotesRequested,
+            Qt::QueuedConnection);
     connect(this, &AppBackend::requestChangeDatabasePath, m_dbManager, &DBManager::onChangeDatabasePathRequested,
             Qt::QueuedConnection);
 
@@ -1203,7 +1213,8 @@ void AppBackend::reloadCurrentContext(bool newNote, int scrollToId) {
     if (m_listViewInfo.isInTag) {
         openTagContext(m_listViewInfo.currentTagList, newNote, scrollToId);
     } else {
-        const int folderId = m_listViewInfo.parentFolderId == INVALID_NODE_ID ? ROOT_FOLDER_ID : m_listViewInfo.parentFolderId;
+        const int folderId =
+            m_listViewInfo.parentFolderId == INVALID_NODE_ID ? ROOT_FOLDER_ID : m_listViewInfo.parentFolderId;
         const bool recursive = folderId == ROOT_FOLDER_ID || folderId == TRASH_FOLDER_ID;
         openFolderContext(folderId, recursive, newNote, scrollToId);
     }
@@ -1244,8 +1255,8 @@ void AppBackend::updateListViewLabel() {
         label1 = QStringLiteral("Trash");
     } else if (!m_listViewInfo.isInTag) {
         NodeData parentFolder;
-        QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, parentFolder),
-                                  Q_ARG(int, m_listViewInfo.parentFolderId));
+        QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(NodeData, parentFolder), Q_ARG(int, m_listViewInfo.parentFolderId));
         label1 = parentFolder.fullTitle();
     } else if (m_listViewInfo.currentTagList.isEmpty()) {
         label1 = QStringLiteral("Tags ...");
@@ -1281,13 +1292,15 @@ void AppBackend::updateCurrentFont() {
     QFont font(m_currentEditorFontFamily, m_editorMediumFontSize);
     const QFontMetrics metrics(font);
     m_textColumnWidth = std::max(360, metrics.horizontalAdvance(QLatin1Char('n')) * currentCharsLimit());
-    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme), m_editorMediumFontSize);
+    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme),
+                                          m_editorMediumFontSize);
     emit editorFontChanged();
     emit editorLayoutChanged();
 }
 
 void AppBackend::saveEditorSettings() const {
-    m_settings->setValue(QStringLiteral("selectedFontTypeface"), QString::fromStdString(to_string(m_currentFontTypeface)));
+    m_settings->setValue(QStringLiteral("selectedFontTypeface"),
+                         QString::fromStdString(to_string(m_currentFontTypeface)));
     m_settings->setValue(QStringLiteral("editorMediumFontSize"), m_editorMediumFontSize);
     m_settings->setValue(QStringLiteral("isTextFullWidth"), m_textFullWidth);
     m_settings->setValue(QStringLiteral("charsLimitPerFontMono"), m_charsLimitPerFont.mono);
@@ -1295,7 +1308,8 @@ void AppBackend::saveEditorSettings() const {
     m_settings->setValue(QStringLiteral("charsLimitPerFontSansSerif"), m_charsLimitPerFont.sansSerif);
     m_settings->setValue(QStringLiteral("chosenMonoFont"), m_listOfMonoFonts.value(m_chosenMonoFontIndex));
     m_settings->setValue(QStringLiteral("chosenSerifFont"), m_listOfSerifFonts.value(m_chosenSerifFontIndex));
-    m_settings->setValue(QStringLiteral("chosenSansSerifFont"), m_listOfSansSerifFonts.value(m_chosenSansSerifFontIndex));
+    m_settings->setValue(QStringLiteral("chosenSansSerifFont"),
+                         m_listOfSansSerifFonts.value(m_chosenSansSerifFontIndex));
     m_settings->setValue(QStringLiteral("theme"), QString::fromStdString(to_string(m_currentTheme)));
     m_settings->setValue(QStringLiteral("isTreeCollapsed"), m_folderTreeCollapsed);
     m_settings->setValue(QStringLiteral("isNoteListCollapsed"), m_noteListCollapsed);

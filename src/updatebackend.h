@@ -7,12 +7,13 @@
 #ifndef UPDATEBACKEND_H
 #define UPDATEBACKEND_H
 
+#include <QtQml/qqmlregistration.h>
+
 #include <QElapsedTimer>
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <QPointer>
 #include <QSettings>
-#include <QtQml/qqmlregistration.h>
 
 class QNetworkReply;
 class QUrl;
@@ -31,7 +32,8 @@ class UpdateBackend : public QObject {
     Q_PROPERTY(double progressValue READ progressValue NOTIFY stateChanged)
     Q_PROPERTY(QString downloadLabelText READ downloadLabelText NOTIFY stateChanged)
     Q_PROPERTY(QString timeRemainingText READ timeRemainingText NOTIFY stateChanged)
-    Q_PROPERTY(bool dontNotifyAutomatically READ dontNotifyAutomatically WRITE setDontNotifyAutomatically NOTIFY dontNotifyAutomaticallyChanged)
+    Q_PROPERTY(bool dontNotifyAutomatically READ dontNotifyAutomatically WRITE setDontNotifyAutomatically NOTIFY
+                   dontNotifyAutomaticallyChanged)
     Q_PROPERTY(bool updateButtonEnabled READ updateButtonEnabled NOTIFY stateChanged)
 
 public:

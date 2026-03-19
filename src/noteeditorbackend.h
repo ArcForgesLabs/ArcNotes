@@ -1,6 +1,8 @@
 #ifndef NOTEEDITORBACKEND_H
 #define NOTEEDITORBACKEND_H
 
+#include <QtQml/qqmlregistration.h>
+
 #include <QAbstractItemModel>
 #include <QColor>
 #include <QJsonArray>
@@ -11,7 +13,6 @@
 #include <QTextDocument>
 #include <QTimer>
 #include <QVector>
-#include <QtQml/qqmlregistration.h>
 
 #include "editorsettingsoptions.h"
 #include "nodedata.h"
