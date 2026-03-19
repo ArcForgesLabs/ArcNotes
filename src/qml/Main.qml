@@ -117,6 +117,25 @@ ApplicationWindow {
         return Qt.formatDate(noteDate, "M/d/yy")
     }
 
+    function editorSidePaddingForWidth(width) {
+        if (width < 355) {
+            return 15
+        }
+        if (width < 515) {
+            return 40
+        }
+        if (width < 755) {
+            return 50
+        }
+        if (width < 775) {
+            return 60
+        }
+        if (width < 800) {
+            return 70
+        }
+        return 80
+    }
+
     function treeIconText(itemType) {
         if (itemType === 1) {
             return fontIconLoader.icons.fa_note_sticky
@@ -663,9 +682,9 @@ ApplicationWindow {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8 + treeDelegate.depth * 14
-                                anchors.rightMargin: 10
-                                spacing: 6
+                                anchors.leftMargin: 6 + treeDelegate.depth * 16
+                                anchors.rightMargin: 8
+                                spacing: 5
 
                                 Text {
                                     visible: treeDelegate.hasChildren && treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
@@ -681,17 +700,17 @@ ApplicationWindow {
 
                                 Item {
                                     visible: !treeDelegate.hasChildren || treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
-                                    implicitWidth: 7
+                                    implicitWidth: 8
                                 }
 
                                 Image {
                                     visible: treeDelegate.model.itemType === 5
                                     source: "qrc:/images/folder.png"
-                                    sourceSize.width: 14
-                                    sourceSize.height: 14
+                                    sourceSize.width: 16
+                                    sourceSize.height: 16
                                     fillMode: Image.PreserveAspectFit
-                                    Layout.preferredWidth: 14
-                                    Layout.preferredHeight: 14
+                                    Layout.preferredWidth: 16
+                                    Layout.preferredHeight: 16
                                 }
 
                                 Text {
@@ -704,9 +723,9 @@ ApplicationWindow {
 
                                 Rectangle {
                                     visible: treeDelegate.model.itemType === 7
-                                    implicitWidth: 8
-                                    implicitHeight: 8
-                                    radius: 4
+                                    implicitWidth: 9
+                                    implicitHeight: 9
+                                    radius: 4.5
                                     color: treeDelegate.model.tagColor ? treeDelegate.model.tagColor : root.accentColor
                                 }
 
@@ -722,11 +741,13 @@ ApplicationWindow {
 
                                 Text {
                                     visible: treeDelegate.model.childCount !== undefined
+                                    Layout.preferredWidth: 18
                                     text: treeDelegate.model.childCount !== undefined ? treeDelegate.model.childCount : ""
                                     color: root.mutedColor
                                     font.family: Notes.AppBackend.displayFontFamily
                                     font.pointSize: 10
                                     horizontalAlignment: Text.AlignRight
+                                    verticalAlignment: Text.AlignVCenter
                                 }
                             }
 
@@ -1199,10 +1220,11 @@ ApplicationWindow {
                             id: editorCanvas
                             width: editorScroll.availableWidth
                             implicitHeight: Math.max(editorArea.implicitHeight + 62, editorScroll.availableHeight)
+                            readonly property int editorSidePadding: root.editorSidePaddingForWidth(width)
 
                             TextArea {
                                 id: editorArea
-                                width: Notes.AppBackend.textFullWidth ? Math.max(0, editorCanvas.width - 48)
+                                width: Notes.AppBackend.textFullWidth ? Math.max(0, editorCanvas.width - editorCanvas.editorSidePadding * 2)
                                                                       : Math.min(Math.max(0, editorCanvas.width - 48),
                                                                                  Notes.AppBackend.textColumnWidth)
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -1215,8 +1237,8 @@ ApplicationWindow {
                                 placeholderText: qsTr("Start writing...")
                                 placeholderTextColor: root.mutedColor
                                 color: root.titleColor
-                                topPadding: 2
-                                bottomPadding: 0
+                                topPadding: 10
+                                bottomPadding: 2
                                 leftPadding: 0
                                 rightPadding: 0
                                 font.family: Notes.AppBackend.editorFontFamily
