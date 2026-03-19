@@ -186,6 +186,23 @@ QVariant NoteListModel::data(const QModelIndex& index, int role) const {
     return {};
 }
 
+QHash<int, QByteArray> NoteListModel::roleNames() const {
+    auto roles = QAbstractListModel::roleNames();
+    roles[NoteID] = "noteId";
+    roles[NoteFullTitle] = "noteFullTitle";
+    roles[NoteCreationDateTime] = "noteCreationDateTime";
+    roles[NoteLastModificationDateTime] = "noteLastModificationDateTime";
+    roles[NoteDeletionDateTime] = "noteDeletionDateTime";
+    roles[NoteContent] = "noteContent";
+    roles[NoteScrollbarPos] = "noteScrollbarPos";
+    roles[NoteTagsList] = "noteTagsList";
+    roles[NoteIsTemp] = "noteIsTemp";
+    roles[NoteParentName] = "noteParentName";
+    roles[NoteTagListScrollbarPos] = "noteTagListScrollbarPos";
+    roles[NoteIsPinned] = "noteIsPinned";
+    return roles;
+}
+
 bool NoteListModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (index.row() < 0 || index.row() >= (m_noteList.count() + m_pinnedList.count())) {
         return false;

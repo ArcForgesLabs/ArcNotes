@@ -10,6 +10,7 @@ import "Utilities.js" as Utils
 
 ApplicationWindow {
     id: root
+    readonly property var mainWindow: Notes.AppBackend
     width: 650
     height: 400
     property string platform: "Other"
@@ -58,7 +59,7 @@ ApplicationWindow {
     }
 
     Connections {
-        target: mainWindow
+        target: root.mainWindow
 
         function onDisplayFontSet (data) {
             root.displayFontFamily = data.displayFont;
@@ -1098,7 +1099,7 @@ ApplicationWindow {
                     onClicked: {
                         if (!root.isVerifyingAgain) {
                             root.isVerifyingAgain = true;
-                            mainWindow.checkProVersion();
+                            root.mainWindow.checkProVersion();
                         }
                     }
                 }

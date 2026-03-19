@@ -9,6 +9,8 @@ import nuttyartist.notes 1.0 as Notes
 
 Item {
     id: settingsContainer
+    readonly property var mainWindow: Notes.AppBackend
+    readonly property var noteEditorLogic: Notes.AppBackend.noteEditor
     property int extraWidthForQWidgets: platform === "Apple" ? 60 : 0
     property int extraHeightForQWidgets: platform === "Apple" ? 40 : 0
     width: settingsPane.width + extraWidthForQWidgets

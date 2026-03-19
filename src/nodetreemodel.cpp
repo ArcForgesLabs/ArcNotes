@@ -289,6 +289,20 @@ QVariant NodeTreeModel::data(const QModelIndex& index, int role) const {
     return item->getData(static_cast<NodeItem::Roles>(role));
 }
 
+QHash<int, QByteArray> NodeTreeModel::roleNames() const {
+    auto roles = QAbstractItemModel::roleNames();
+    roles[NodeItem::Roles::ItemType] = "itemType";
+    roles[NodeItem::Roles::DisplayText] = "displayText";
+    roles[NodeItem::Roles::Icon] = "icon";
+    roles[NodeItem::Roles::TagColor] = "tagColor";
+    roles[NodeItem::Roles::IsExpandable] = "isExpandable";
+    roles[NodeItem::Roles::AbsPath] = "absPath";
+    roles[NodeItem::Roles::RelPos] = "relPos";
+    roles[NodeItem::Roles::ChildCount] = "childCount";
+    roles[NodeItem::Roles::NodeId] = "nodeId";
+    return roles;
+}
+
 QModelIndex NodeTreeModel::rootIndex() const {
     return createIndex(0, 0, m_rootItem);
 }
