@@ -838,7 +838,7 @@ ApplicationWindow {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 22
+                            Layout.preferredHeight: 25
                             radius: 3
                             color: root.searchBackground
                             border.width: searchField.activeFocus ? 2 : 1
@@ -935,13 +935,15 @@ ApplicationWindow {
                             property bool showPinnedHeader: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.noteRowStartsPinnedSection(noteDelegate.index)
                             property bool showNotesHeader: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.noteListHasPinnedNotes() && Notes.AppBackend.noteRowStartsNotesSection(noteDelegate.index)
                             property bool showFolderName: root.isAllNotesContext() && noteDelegate.model.noteParentName
-                            property int cardHeight: showFolderName ? 88 : 68
+                            property int rowGap: noteDelegate.index > 0 ? 4 : 0
+                            property int cardHeight: showFolderName ? 90 : 70
                             width: noteList.width
-                            height: cardHeight + (showPinnedHeader ? 25 : 0) + (showNotesHeader ? 35 : 0)
+                            height: rowGap + cardHeight + (showPinnedHeader ? 25 : 0) + (showNotesHeader ? 35 : 0)
 
                             NoteSectionHeader {
                                 id: pinnedHeader
                                 visible: noteDelegate.showPinnedHeader
+                                y: noteDelegate.rowGap
                                 width: parent.width
                                 text: qsTr("Pinned")
                                 collapsible: true
@@ -950,7 +952,7 @@ ApplicationWindow {
                             NoteSectionHeader {
                                 id: notesHeader
                                 visible: noteDelegate.showNotesHeader
-                                y: noteDelegate.showPinnedHeader ? 25 : 10
+                                y: noteDelegate.rowGap + (noteDelegate.showPinnedHeader ? 25 : 10)
                                 width: parent.width
                                 text: qsTr("Notes")
                             }
@@ -959,7 +961,7 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                anchors.topMargin: (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0)
+                                anchors.topMargin: noteDelegate.rowGap + (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0)
                                 height: noteDelegate.cardHeight
                                 color: noteDelegate.selected ? root.selectedColor : noteDelegate.hovered ? root.hoverBackground : root.noteCardBackground
                             }
@@ -968,11 +970,11 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                anchors.topMargin: (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0) + 8
+                                anchors.topMargin: noteDelegate.rowGap + (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0) + 8
                                 anchors.bottom: parent.bottom
-                                anchors.leftMargin: 12
+                                anchors.leftMargin: 10
                                 anchors.rightMargin: 10
-                                spacing: 2
+                                spacing: 3
 
                                 RowLayout {
                                     width: parent.width
@@ -1046,8 +1048,8 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
                                 height: 1
                                 color: root.edgeColor
                                 visible: noteDelegate.index < noteList.count - 1
