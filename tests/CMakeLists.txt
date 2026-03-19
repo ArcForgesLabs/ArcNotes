@@ -2,32 +2,16 @@ set(ARCNOTES_TEST_TARGET arcnotes-tests)
 
 set(ARCNOTES_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tst_mainwindow.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tst_mainwindow.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tst_notedata.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tst_notedata.h
     ${CMAKE_CURRENT_SOURCE_DIR}/tst_notemodel.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tst_notemodel.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/tst_noteview.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/tst_noteview.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/tst_notemodel.h)
 
 add_executable(${ARCNOTES_TEST_TARGET} ${ARCNOTES_TEST_SOURCES})
 
 target_include_directories(
   ${ARCNOTES_TEST_TARGET}
   PRIVATE ${PROJECT_SOURCE_DIR}/src)
-
-target_include_directories(
-  ${ARCNOTES_TEST_TARGET} SYSTEM
-  PRIVATE ${PROJECT_SOURCE_DIR}/3rdParty/qautostart/src
-          ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit
-          ${PROJECT_SOURCE_DIR}/3rdParty/qxt)
-
-if(UPDATE_CHECKER)
-  target_include_directories(
-    ${ARCNOTES_TEST_TARGET} SYSTEM
-    PRIVATE ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/include)
-endif()
 
 target_compile_definitions(
   ${ARCNOTES_TEST_TARGET}
@@ -40,15 +24,7 @@ endif()
 
 target_link_libraries(
   ${ARCNOTES_TEST_TARGET}
-  PRIVATE Qt${QT_VERSION_MAJOR}::Concurrent
-          Qt${QT_VERSION_MAJOR}::Core
-          Qt${QT_VERSION_MAJOR}::Gui
-          Qt${QT_VERSION_MAJOR}::Network
-          Qt${QT_VERSION_MAJOR}::Sql
-          Qt${QT_VERSION_MAJOR}::Test
-          Qt${QT_VERSION_MAJOR}::Widgets
-          Qt${QT_VERSION_MAJOR}::Quick
-          Qt${QT_VERSION_MAJOR}::QuickWidgets)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Test)
 
 add_test(NAME ${ARCNOTES_TEST_TARGET} COMMAND ${ARCNOTES_TEST_TARGET})
 set_tests_properties(${ARCNOTES_TEST_TARGET} PROPERTIES ENVIRONMENT

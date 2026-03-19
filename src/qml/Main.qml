@@ -110,6 +110,16 @@ ApplicationWindow {
         }
     }
 
+    AboutDialog {
+        id: aboutDialog
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        displayFontFamily: Notes.AppBackend.displayFontFamily
+        themeName: root.themeData.theme
+        applicationName: Qt.application.name ? Qt.application.name : "ArcNotes"
+        applicationVersion: Qt.application.version ? Qt.application.version : "0.0.0"
+    }
+
     Popup {
         id: editorSettingsPopup
         x: root.width - width - 20
@@ -125,8 +135,8 @@ ApplicationWindow {
         onClosed: Notes.AppBackend.setEditorSettingsFromQuickViewVisibility(false)
 
         contentItem: EditorSettings {
-            extraWidthForQWidgets: 0
-            extraHeightForQWidgets: 0
+            extraWidthPadding: 0
+            extraHeightPadding: 0
         }
     }
 
@@ -197,6 +207,11 @@ ApplicationWindow {
                             editorSettingsPopup.open()
                         }
                     }
+                }
+
+                Button {
+                    text: qsTr("About")
+                    onClicked: aboutDialog.open()
                 }
             }
         }

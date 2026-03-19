@@ -85,9 +85,7 @@ set(QT_COMPONENTS
     Sql
     Test
     Quick
-    QuickControls2
-    Widgets
-    QuickWidgets)
+    QuickControls2)
 
 message(STATUS "Trying to find Qt 6...")
 if(NOT DEFINED Qt6_DIR AND DEFINED ENV{Qt6_DIR})

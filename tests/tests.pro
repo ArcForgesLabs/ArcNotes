@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets testlib network
+QT       += core testlib
 
 TARGET    = test
 CONFIG   += testcase
@@ -19,16 +19,12 @@ LIBS += -lX11
 DEPENDPATH += ../src/OBJ
 
 HEADERS += \
-    tst_mainwindow.h \
     tst_notedata.h \
-    tst_notemodel.h \
-    tst_noteview.h
+    tst_notemodel.h
 
 SOURCES += \
     main.cpp \
     tst_notedata.cpp \
-    tst_mainwindow.cpp \
-    tst_notemodel.cpp \
-    tst_noteview.cpp
+    tst_notemodel.cpp
 
 DEFINES += SRCDIR=\\\"$$PWD\\\"

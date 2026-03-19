@@ -791,8 +791,8 @@ Item {
                             id: editorSettings
                             visible: root.showEditorSettings
                             anchors.centerIn: parent
-                            extraWidthForQWidgets: 0
-                            extraHeightForQWidgets: 0
+                            extraWidthPadding: 0
+                            extraHeightPadding: 0
 
                             onVisibleChanged: {
                                 if (editorSettingsPopupContainer.visible) {
