@@ -26,6 +26,7 @@ ApplicationWindow {
     property color accentColor: darkTheme ? "#5b94f5" : "#2383e2"
     property color selectedColor: darkTheme ? "#253245" : "#e7f0ff"
     property bool editorSyncing: false
+    property int selectedTreeRow: -1
     property var editorFlickable: editorScroll.contentItem
 
     Notes.UpdateBackend {
@@ -289,7 +290,6 @@ ApplicationWindow {
                     anchors.fill: parent
                     clip: true
                     model: Notes.AppBackend.treeModel
-                    property int currentRow: -1
                     columnWidthProvider: function(column) { return width }
 
                     delegate: Rectangle {
@@ -302,7 +302,7 @@ ApplicationWindow {
                         required property int column
                         required property var model
                         implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 30 : 38
-                        color: treeDelegate.treeView.currentRow === treeDelegate.row ? root.selectedColor : "transparent"
+                        color: root.selectedTreeRow === treeDelegate.row ? root.selectedColor : "transparent"
 
                         RowLayout {
                             anchors.fill: parent
@@ -335,7 +335,7 @@ ApplicationWindow {
 
                             Text {
                                 visible: treeDelegate.model.childCount !== undefined && treeDelegate.model.childCount > 0
-                                text: treeDelegate.model.childCount
+                                text: treeDelegate.model.childCount !== undefined ? treeDelegate.model.childCount : ""
                                 color: root.mutedColor
                                 font.family: Notes.AppBackend.displayFontFamily
                             }
@@ -344,7 +344,7 @@ ApplicationWindow {
                         TapHandler {
                             enabled: treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
                             onTapped: {
-                                treeDelegate.treeView.currentRow = treeDelegate.row
+                                root.selectedTreeRow = treeDelegate.row
                                 Notes.AppBackend.activateTreeItem(treeDelegate.model.itemType ? treeDelegate.model.itemType : 0,
                                                                   treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1)
                             }

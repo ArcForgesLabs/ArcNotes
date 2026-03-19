@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/qt/qml/nuttyartist/notes">
+        <file alias="Utilities.js">qml/Utilities.js</file>
+    </qresource>
+</RCC>
