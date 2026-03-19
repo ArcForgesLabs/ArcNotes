@@ -30,10 +30,13 @@ ApplicationWindow {
     property color accentColor: darkTheme ? "#5b94f5" : "#448ac9"
     property color accentHoverColor: darkTheme ? "#7aa8f7" : "#336ea2"
     property color accentPressedColor: darkTheme ? "#9bbcf8" : "#27557d"
-    property color selectedColor: darkTheme ? "#243140" : "#d8eaf5"
+    property color selectedColor: darkTheme ? "#243140" : "#dae9ef"
     property color searchBackground: darkTheme ? "#191919" : themeData.backgroundColor
     property color searchBorderColor: darkTheme ? "#444444" : "#cdcdcd"
-    property color hoverBackground: darkTheme ? "#2a2a2a" : "#ededed"
+    property color hoverBackground: darkTheme ? "#2a2a2a" : "#cfcfcf"
+    property color secondaryTextColor: darkTheme ? "#9a9a9a" : "#8e9296"
+    property color treeHoverBackground: darkTheme ? "#233445" : "#b4d0e9"
+    property color treeSelectedBackground: darkTheme ? "#243140" : "#448ac9"
     property color noteCardBackground: darkTheme ? "#191919" : themeData.backgroundColor
     property bool editorSyncing: false
     property int selectedTreeRow: -1
@@ -138,7 +141,7 @@ ApplicationWindow {
 
     function treeIconText(itemType) {
         if (itemType === 1) {
-            return fontIconLoader.icons.fa_note_sticky
+            return fontIconLoader.icons.fa_folder
         }
         if (itemType === 2) {
             return fontIconLoader.icons.fa_trash
@@ -572,6 +575,7 @@ ApplicationWindow {
         id: sectionRoot
         property string text: ""
         property bool collapsible: false
+        property bool collapsed: false
 
         implicitHeight: 25
         implicitWidth: parent ? parent.width : 0
@@ -581,7 +585,7 @@ ApplicationWindow {
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: sectionRoot.text
-            color: root.mutedColor
+            color: root.secondaryTextColor
             font.family: Notes.AppBackend.displayFontFamily
             font.pointSize: 10
             font.bold: true
@@ -592,7 +596,7 @@ ApplicationWindow {
             anchors.right: parent.right
             anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
-            text: fontIconLoader.icons.fa_chevron_down
+            text: sectionRoot.collapsed ? fontIconLoader.icons.fa_chevron_right : fontIconLoader.icons.fa_chevron_down
             font.family: fontIconLoader.fa_solid
             font.pointSize: 8
             color: root.accentColor
@@ -672,26 +676,37 @@ ApplicationWindow {
                             required property bool hasChildren
                             required property bool expanded
                             required property var model
+                            readonly property bool isSection: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
+                            readonly property bool isFolderItem: treeDelegate.model.itemType === 5
+                            readonly property bool isTagItem: treeDelegate.model.itemType === 7
+                            readonly property bool isTopButton: treeDelegate.model.itemType === 1 || treeDelegate.model.itemType === 2
+                            property bool hovered: false
                             width: treeView.width
-                            implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 25 : 25
+                            implicitHeight: 25
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: root.selectedTreeRow === treeDelegate.row ? root.selectedColor : "transparent"
+                                color: treeDelegate.isSection ? "transparent"
+                                                              : root.selectedTreeRow === treeDelegate.row ? root.treeSelectedBackground
+                                                                                                          : treeDelegate.hovered ? root.treeHoverBackground
+                                                                                                                                : "transparent"
                             }
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 6 + treeDelegate.depth * 16
+                                anchors.leftMargin: treeDelegate.isSection ? 5
+                                                                         : treeDelegate.isFolderItem ? 10
+                                                                                                     : (treeDelegate.isTopButton || treeDelegate.isTagItem) ? 22
+                                                                                                                                                               : 15 + treeDelegate.depth * 16
                                 anchors.rightMargin: 8
                                 spacing: 5
 
                                 Text {
-                                    visible: treeDelegate.hasChildren && treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
+                                    visible: treeDelegate.hasChildren && treeDelegate.isFolderItem
                                     text: treeDelegate.expanded ? fontIconLoader.icons.fa_chevron_down : fontIconLoader.icons.fa_chevron_right
                                     font.family: fontIconLoader.fa_solid
                                     font.pointSize: 7
-                                    color: root.mutedColor
+                                    color: root.selectedTreeRow === treeDelegate.row ? "#ffffff" : root.mutedColor
 
                                     TapHandler {
                                         onTapped: treeDelegate.treeView.toggleExpanded(treeDelegate.row)
@@ -699,12 +714,12 @@ ApplicationWindow {
                                 }
 
                                 Item {
-                                    visible: !treeDelegate.hasChildren || treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
-                                    implicitWidth: 8
+                                    visible: !treeDelegate.hasChildren || !treeDelegate.isFolderItem
+                                    implicitWidth: treeDelegate.isSection ? 0 : 8
                                 }
 
                                 Image {
-                                    visible: treeDelegate.model.itemType === 5
+                                    visible: treeDelegate.isFolderItem
                                     source: "qrc:/images/folder.png"
                                     sourceSize.width: 16
                                     sourceSize.height: 16
@@ -714,50 +729,70 @@ ApplicationWindow {
                                 }
 
                                 Text {
-                                    visible: treeDelegate.model.itemType !== 5 && root.treeIconText(treeDelegate.model.itemType) !== ""
+                                    visible: !treeDelegate.isFolderItem && !treeDelegate.isSection && root.treeIconText(treeDelegate.model.itemType) !== ""
                                     text: root.treeIconText(treeDelegate.model.itemType)
                                     font.family: fontIconLoader.fa_solid
-                                    font.pointSize: 10
-                                    color: treeDelegate.model.itemType === 2 ? root.mutedColor : root.accentColor
+                                    font.pointSize: treeDelegate.isTopButton ? 11 : 10
+                                    color: root.selectedTreeRow === treeDelegate.row ? "#ffffff"
+                                                                                     : treeDelegate.model.itemType === 2 ? root.mutedColor : root.accentColor
                                 }
 
                                 Rectangle {
-                                    visible: treeDelegate.model.itemType === 7
+                                    visible: treeDelegate.isTagItem
                                     implicitWidth: 9
                                     implicitHeight: 9
                                     radius: 4.5
                                     color: treeDelegate.model.tagColor ? treeDelegate.model.tagColor : root.accentColor
+                                    opacity: root.selectedTreeRow === treeDelegate.row ? 0.9 : 1.0
                                 }
 
                                 Text {
                                     Layout.fillWidth: true
                                     text: treeDelegate.model.displayText ? treeDelegate.model.displayText : ""
-                                    color: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4 ? root.mutedColor : root.titleColor
+                                    color: treeDelegate.isSection ? root.mutedColor
+                                                                  : root.selectedTreeRow === treeDelegate.row ? "#ffffff" : root.titleColor
                                     font.family: Notes.AppBackend.displayFontFamily
-                                    font.pointSize: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4 ? 10 : 10
-                                    font.bold: treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
+                                    font.pointSize: treeDelegate.isSection ? 9 : 10
+                                    font.bold: treeDelegate.isSection || treeDelegate.isFolderItem || treeDelegate.isTopButton
                                     elide: Text.ElideRight
                                 }
 
                                 Text {
-                                    visible: treeDelegate.model.childCount !== undefined
-                                    Layout.preferredWidth: 18
+                                    visible: !treeDelegate.isSection && treeDelegate.model.childCount !== undefined
+                                    Layout.preferredWidth: 22
                                     text: treeDelegate.model.childCount !== undefined ? treeDelegate.model.childCount : ""
-                                    color: root.mutedColor
+                                    color: root.selectedTreeRow === treeDelegate.row ? "#ffffff" : root.mutedColor
                                     font.family: Notes.AppBackend.displayFontFamily
+                                    font.pointSize: 9
+                                    font.bold: true
+                                    horizontalAlignment: Text.AlignRight
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                Text {
+                                    visible: treeDelegate.isSection
+                                    Layout.preferredWidth: 18
+                                    text: root.iconPlus
+                                    font.family: fontIconLoader.fa_solid
                                     font.pointSize: 10
+                                    color: root.accentColor
                                     horizontalAlignment: Text.AlignRight
                                     verticalAlignment: Text.AlignVCenter
                                 }
                             }
 
                             TapHandler {
-                                enabled: treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
+                                enabled: !treeDelegate.isSection
                                 onTapped: {
                                     root.selectedTreeRow = treeDelegate.row
                                     Notes.AppBackend.activateTreeItem(treeDelegate.model.itemType ? treeDelegate.model.itemType : 0,
                                                                       treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1)
                                 }
+                            }
+
+                            HoverHandler {
+                                enabled: !treeDelegate.isSection && treeDelegate.model.itemType !== 2
+                                onHoveredChanged: treeDelegate.hovered = hovered
                             }
                         }
                     }
@@ -968,6 +1003,7 @@ ApplicationWindow {
                                 width: parent.width
                                 text: qsTr("Pinned")
                                 collapsible: true
+                                collapsed: false
                             }
 
                             NoteSectionHeader {
@@ -991,11 +1027,11 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                anchors.topMargin: noteDelegate.rowGap + (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0) + 8
+                                anchors.topMargin: noteDelegate.rowGap + (noteDelegate.showPinnedHeader ? 25 : 0) + (noteDelegate.showNotesHeader ? 25 : 0) + 10
                                 anchors.bottom: parent.bottom
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
-                                spacing: 3
+                                anchors.leftMargin: 20
+                                anchors.rightMargin: 20
+                                spacing: 0
 
                                 RowLayout {
                                     width: parent.width
@@ -1027,6 +1063,7 @@ ApplicationWindow {
                                     font.family: Notes.AppBackend.displayFontFamily
                                     font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
                                     elide: Text.ElideRight
+                                    topPadding: 2
                                 }
 
                                 Text {
@@ -1034,10 +1071,11 @@ ApplicationWindow {
                                     text: root.notePreviewText(noteDelegate.model.noteContent,
                                                                noteDelegate.model.noteFullTitle,
                                                                noteDelegate.model.noteParentName)
-                                    color: root.mutedColor
+                                    color: root.secondaryTextColor
                                     font.family: Notes.AppBackend.displayFontFamily
                                     font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
                                     elide: Text.ElideRight
+                                    topPadding: 5
                                 }
 
                                 RowLayout {
@@ -1057,7 +1095,7 @@ ApplicationWindow {
                                     Text {
                                         Layout.fillWidth: true
                                         text: noteDelegate.model.noteParentName ? noteDelegate.model.noteParentName : ""
-                                        color: root.mutedColor
+                                        color: root.secondaryTextColor
                                         font.family: Notes.AppBackend.displayFontFamily
                                         font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
                                         elide: Text.ElideRight
@@ -1069,8 +1107,8 @@ ApplicationWindow {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
+                                anchors.leftMargin: 20
+                                anchors.rightMargin: 20
                                 height: 1
                                 color: root.edgeColor
                                 visible: noteDelegate.index < noteList.count - 1
@@ -1134,10 +1172,14 @@ ApplicationWindow {
                             glyph: root.iconMaterialArticle
                             fontFamily: fontIconLoader.mt_symbols
                             pointSize: Notes.AppBackend.platformName === "Apple" ? 20 : 17
-                            glyphColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
-                            enabled: Notes.AppBackend.kanbanVisible
+                            glyphColor: Notes.AppBackend.kanbanVisible ? root.mutedColor : root.accentColor
+                            enabled: true
                             hoverEnabled: Notes.AppBackend.kanbanVisible
-                            onClicked: Notes.AppBackend.setKanbanVisibility(false)
+                            onClicked: {
+                                if (Notes.AppBackend.kanbanVisible) {
+                                    Notes.AppBackend.setKanbanVisibility(false)
+                                }
+                            }
                         }
 
                         Item {
@@ -1150,9 +1192,14 @@ ApplicationWindow {
                             glyph: root.iconMaterialKanban
                             fontFamily: fontIconLoader.mt_symbols
                             pointSize: Notes.AppBackend.platformName === "Apple" ? 20 : 17
-                            glyphColor: Notes.AppBackend.kanbanVisible ? root.mutedColor : root.accentColor
+                            glyphColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
                             enabled: !Notes.AppBackend.currentContextIsTrash
-                            onClicked: Notes.AppBackend.setKanbanVisibility(true)
+                            hoverEnabled: !Notes.AppBackend.currentContextIsTrash && !Notes.AppBackend.kanbanVisible
+                            onClicked: {
+                                if (!Notes.AppBackend.kanbanVisible) {
+                                    Notes.AppBackend.setKanbanVisibility(true)
+                                }
+                            }
                         }
 
                         Item {
@@ -1225,7 +1272,7 @@ ApplicationWindow {
                             TextArea {
                                 id: editorArea
                                 width: Notes.AppBackend.textFullWidth ? Math.max(0, editorCanvas.width - editorCanvas.editorSidePadding * 2)
-                                                                      : Math.min(Math.max(0, editorCanvas.width - 48),
+                                                                      : Math.min(Math.max(0, editorCanvas.width - editorCanvas.editorSidePadding * 2),
                                                                                  Notes.AppBackend.textColumnWidth)
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top
@@ -1294,7 +1341,7 @@ ApplicationWindow {
                                     id: tagDelegate
                                     required property var model
                                     radius: 10
-                                    color: root.darkTheme ? "#4c5561" : "#daeaf8"
+                                    color: root.darkTheme ? "#4c5561" : "#daebf8"
                                     implicitHeight: 20
                                     implicitWidth: 5 + 12 + 5 + tagLabel.implicitWidth + 7
 
