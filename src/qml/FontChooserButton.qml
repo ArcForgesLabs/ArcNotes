@@ -26,16 +26,22 @@ Column {
     signal clicked(int chosenFontIndex)
 
     function itemTextAt(itemIndex) {
+        if (!comboBoxControl.model) {
+            return ""
+        }
+
         if (!comboBoxControl.textRole) {
             return Array.isArray(comboBoxControl.model) ? comboBoxControl.model[itemIndex]
-                                                        : comboBoxControl.model.get(itemIndex);
+                                                        : comboBoxControl.model.get(itemIndex)
         }
 
         if (Array.isArray(comboBoxControl.model)) {
-            return comboBoxControl.model[itemIndex][comboBoxControl.textRole];
+            var item = comboBoxControl.model[itemIndex]
+            return item && item[comboBoxControl.textRole] !== undefined ? item[comboBoxControl.textRole] : ""
         }
 
-        return comboBoxControl.model.get(itemIndex)[comboBoxControl.textRole];
+        var modelItem = comboBoxControl.model.get(itemIndex)
+        return modelItem && modelItem[comboBoxControl.textRole] !== undefined ? modelItem[comboBoxControl.textRole] : ""
     }
 
     onClicked: {

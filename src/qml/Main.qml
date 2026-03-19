@@ -22,20 +22,33 @@ ApplicationWindow {
 
     property var themeData: Notes.AppBackend.themeData
     property bool darkTheme: themeData.theme === "Dark"
-    property color panelBackground: darkTheme ? "#202020" : "#ffffff"
-    property color headerBackground: darkTheme ? "#171717" : "#fbfbfa"
-    property color edgeColor: darkTheme ? "#2f2f2f" : "#e8e3da"
-    property color titleColor: darkTheme ? "#ececec" : "#2f2c26"
-    property color mutedColor: darkTheme ? "#8f8f8f" : "#7b7568"
-    property color accentColor: darkTheme ? "#5b94f5" : "#2383e2"
-    property color selectedColor: darkTheme ? "#253245" : "#e7f0ff"
-    property color searchBackground: darkTheme ? "#181818" : "#f5f5f4"
-    property color hoverBackground: darkTheme ? "#2a2a2a" : "#f1f1ef"
-    property color noteCardBackground: darkTheme ? "#242424" : "#ffffff"
+    property color panelBackground: darkTheme ? "#191919" : themeData.backgroundColor
+    property color headerBackground: darkTheme ? "#191919" : themeData.backgroundColor
+    property color edgeColor: darkTheme ? "#444444" : "#bfbfbf"
+    property color titleColor: darkTheme ? "#d4d4d4" : "#1a1a1a"
+    property color mutedColor: darkTheme ? "#9a9a9a" : "#848484"
+    property color accentColor: darkTheme ? "#5b94f5" : "#448ac9"
+    property color accentHoverColor: darkTheme ? "#7aa8f7" : "#336ea2"
+    property color accentPressedColor: darkTheme ? "#9bbcf8" : "#27557d"
+    property color selectedColor: darkTheme ? "#243140" : "#d8eaf5"
+    property color searchBackground: darkTheme ? "#191919" : themeData.backgroundColor
+    property color searchBorderColor: darkTheme ? "#444444" : "#cdcdcd"
+    property color hoverBackground: darkTheme ? "#2a2a2a" : "#ededed"
+    property color noteCardBackground: darkTheme ? "#191919" : themeData.backgroundColor
     property bool editorSyncing: false
     property int selectedTreeRow: -1
     property var editorFlickable: editorScroll.contentItem
     property bool pendingPermanentDelete: false
+
+    readonly property string iconGear: "\uf013"
+    readonly property string iconPlus: "\uf067"
+    readonly property string iconSearch: "\uf002"
+    readonly property string iconCloseSmall: "\uf00d"
+    readonly property string iconMaterialMore: "\ue5d3"
+    readonly property string iconMaterialKanban: "\ueb7f"
+    readonly property string iconMaterialArticle: "\uef42"
+    readonly property string iconMaterialPaneOpen: "\uec73"
+    readonly property string iconMaterialPaneClosed: "\ue31c"
 
     function cleanTextLine(line) {
         if (line === undefined || line === null) {
@@ -95,7 +108,7 @@ ApplicationWindow {
         Notes.AppBackend.showEditorSettings()
 
         if (anchorItem) {
-            var pos = anchorItem.mapToItem(root.contentItem, 0, anchorItem.height + 8)
+            var pos = anchorItem.mapToItem(root.contentItem, 0, anchorItem.height + 4)
             editorSettingsPopup.x = Math.max(12, Math.round(pos.x - editorSettingsPopup.width + anchorItem.width))
             editorSettingsPopup.y = Math.round(pos.y)
         }
@@ -103,11 +116,18 @@ ApplicationWindow {
         editorSettingsPopup.open()
     }
 
+    function openGlobalMenu(anchorItem) {
+        if (!anchorItem) {
+            return
+        }
+
+        var pos = anchorItem.mapToItem(root.contentItem, 0, anchorItem.height + 4)
+        globalMenu.popup(Math.round(pos.x), Math.round(pos.y))
+    }
+
     function openNoteContextMenu(anchorItem, X, Y) {
         var pos = anchorItem.mapToItem(root.contentItem, X, Y)
-        noteContextMenu.x = Math.max(8, Math.round(pos.x))
-        noteContextMenu.y = Math.max(8, Math.round(pos.y))
-        noteContextMenu.open()
+        noteContextMenu.popup(Math.max(8, Math.round(pos.x)), Math.max(8, Math.round(pos.y)))
     }
 
     function requestDeleteCurrentNote() {
@@ -307,6 +327,26 @@ ApplicationWindow {
     }
 
     Menu {
+        id: globalMenu
+
+        MenuItem {
+            text: qsTr("Editor Settings")
+            onTriggered: root.toggleEditorSettings(globalSettingsButton)
+        }
+
+        MenuItem {
+            visible: updateBackend.enabled
+            text: qsTr("Check For Updates")
+            onTriggered: updateBackend.checkForUpdates(true)
+        }
+
+        MenuItem {
+            text: qsTr("About")
+            onTriggered: aboutDialog.open()
+        }
+    }
+
+    Menu {
         id: noteContextMenu
 
         MenuItem {
@@ -349,126 +389,145 @@ ApplicationWindow {
         }
     }
 
+    component ToolGlyphButton: Item {
+        id: buttonRoot
+        property string glyph: ""
+        property string fontFamily: fontIconLoader.fa_solid
+        property color glyphColor: root.accentColor
+        property bool enabled: true
+        property bool hoverEnabled: true
+        property int pointSize: Notes.AppBackend.platformName === "Apple" ? 18 : 15
+        property int buttonWidth: 33
+        property int buttonHeight: 25
+        property bool hovered: false
+        signal clicked
+
+        implicitWidth: buttonWidth
+        implicitHeight: buttonHeight
+        width: buttonWidth
+        height: buttonHeight
+
+        Text {
+            anchors.centerIn: parent
+            text: buttonRoot.glyph
+            font.family: buttonRoot.fontFamily
+            font.pointSize: buttonRoot.pointSize
+            color: !buttonRoot.enabled ? Qt.rgba(buttonRoot.glyphColor.r, buttonRoot.glyphColor.g, buttonRoot.glyphColor.b, 0.35)
+                                      : buttonMouse.pressed ? root.accentPressedColor
+                                                            : buttonRoot.hovered ? root.accentHoverColor
+                                                                                 : buttonRoot.glyphColor
+        }
+
+        MouseArea {
+            id: buttonMouse
+            anchors.fill: parent
+            enabled: buttonRoot.enabled
+            hoverEnabled: buttonRoot.hoverEnabled
+            cursorShape: Qt.PointingHandCursor
+            onEntered: buttonRoot.hovered = true
+            onExited: buttonRoot.hovered = false
+            onClicked: buttonRoot.clicked()
+        }
+    }
+
+    component VerticalDivider: Rectangle {
+        implicitWidth: 1
+        color: root.edgeColor
+    }
+
     SplitView {
         anchors.fill: parent
         orientation: Qt.Horizontal
 
         handle: Rectangle {
-            implicitWidth: 1
+            implicitWidth: 0
             implicitHeight: 1
-            color: root.edgeColor
+            color: "transparent"
         }
 
         Rectangle {
             visible: !Notes.AppBackend.folderTreeCollapsed
-            SplitView.preferredWidth: 228
             color: root.panelBackground
+            SplitView.minimumWidth: 185
+            SplitView.preferredWidth: 185
 
-            ColumnLayout {
+            RowLayout {
                 anchors.fill: parent
                 spacing: 0
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 48
-                    color: root.panelBackground
-                    border.color: root.edgeColor
-                    border.width: 1
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 14
-                        anchors.rightMargin: 10
-                        spacing: 8
-
-                        Image {
-                            source: "qrc:/images/notes_system_tray_icon.png"
-                            sourceSize.width: 18
-                            sourceSize.height: 18
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                            fillMode: Image.PreserveAspectFit
-                        }
-
-                        Text {
-                            Layout.fillWidth: true
-                            text: qsTr("ArcNotes")
-                            color: root.titleColor
-                            font.family: Notes.AppBackend.displayFontFamily
-                            font.pointSize: 11
-                            font.bold: true
-                            elide: Text.ElideRight
-                        }
-
-                        IconButton {
-                            icon: fontIconLoader.icons.fa_bell
-                            visible: updateBackend.enabled
-                            themeData: root.themeData
-                            themeColor: root.titleColor
-                            platform: Notes.AppBackend.platformName
-                            onClicked: updateBackend.checkForUpdates(true)
-                        }
-
-                        IconButton {
-                            icon: fontIconLoader.icons.fa_circle_info
-                            themeData: root.themeData
-                            themeColor: root.titleColor
-                            platform: Notes.AppBackend.platformName
-                            onClicked: aboutDialog.open()
-                        }
-
-                        IconButton {
-                            icon: fontIconLoader.icons.fa_gear
-                            themeData: root.themeData
-                            themeColor: root.titleColor
-                            platform: Notes.AppBackend.platformName
-                            onClicked: root.toggleEditorSettings(editorMenuButton)
-                        }
-                    }
-                }
-
-                TreeView {
-                    id: treeView
+                ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
-                    model: Notes.AppBackend.treeModel
-                    columnWidthProvider: function(column) { return width }
+                    spacing: 0
 
-                    delegate: Item {
-                        id: treeDelegate
-                        required property TreeView treeView
-                        required property int row
-                        required property int depth
-                        required property bool hasChildren
-                        required property bool expanded
-                        required property int column
-                        required property var model
-                        implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 28 : 36
-                        width: treeView.width
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 3
+                    }
 
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.leftMargin: 6
-                            anchors.rightMargin: 6
-                            anchors.topMargin: 1
-                            anchors.bottomMargin: 1
-                            radius: 8
-                            color: root.selectedTreeRow === treeDelegate.row ? root.selectedColor : "transparent"
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 25
+                        spacing: 0
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        ToolGlyphButton {
+                            id: globalSettingsButton
+                            glyph: root.iconGear
+                            fontFamily: fontIconLoader.fa_solid
+                            glyphColor: root.accentColor
+                            onClicked: root.openGlobalMenu(globalSettingsButton)
+                        }
+
+                        Item {
+                            Layout.preferredWidth: 3
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 2
+                    }
+
+                    TreeView {
+                        id: treeView
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: Notes.AppBackend.treeModel
+                        columnWidthProvider: function() { return width }
+
+                        delegate: Item {
+                            id: treeDelegate
+                            required property TreeView treeView
+                            required property int row
+                            required property int depth
+                            required property bool hasChildren
+                            required property bool expanded
+                            required property var model
+                            width: treeView.width
+                            implicitHeight: (treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4) ? 28 : 24
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: root.selectedTreeRow === treeDelegate.row ? root.selectedColor : "transparent"
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 10 + treeDelegate.depth * 16
-                                anchors.rightMargin: 12
-                                spacing: 8
+                                anchors.leftMargin: 8 + treeDelegate.depth * 14
+                                anchors.rightMargin: 10
+                                spacing: 6
 
                                 Text {
                                     visible: treeDelegate.hasChildren && treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
                                     text: treeDelegate.expanded ? fontIconLoader.icons.fa_chevron_down : fontIconLoader.icons.fa_chevron_right
-                                    color: root.mutedColor
                                     font.family: fontIconLoader.fa_solid
-                                    font.pointSize: 8
-                                    verticalAlignment: Text.AlignVCenter
+                                    font.pointSize: 7
+                                    color: root.mutedColor
 
                                     TapHandler {
                                         onTapped: treeDelegate.treeView.toggleExpanded(treeDelegate.row)
@@ -477,7 +536,7 @@ ApplicationWindow {
 
                                 Item {
                                     visible: !treeDelegate.hasChildren || treeDelegate.model.itemType === 3 || treeDelegate.model.itemType === 4
-                                    implicitWidth: 8
+                                    implicitWidth: 7
                                 }
 
                                 Image {
@@ -491,12 +550,11 @@ ApplicationWindow {
                                 }
 
                                 Text {
-                                    visible: treeDelegate.model.itemType !== 5 && treeIconText(treeDelegate.model.itemType) !== ""
-                                    text: treeIconText(treeDelegate.model.itemType)
-                                    color: treeDelegate.model.itemType === 2 ? root.mutedColor : root.accentColor
+                                    visible: treeDelegate.model.itemType !== 5 && root.treeIconText(treeDelegate.model.itemType) !== ""
+                                    text: root.treeIconText(treeDelegate.model.itemType)
                                     font.family: fontIconLoader.fa_solid
                                     font.pointSize: 10
-                                    verticalAlignment: Text.AlignVCenter
+                                    color: treeDelegate.model.itemType === 2 ? root.mutedColor : root.accentColor
                                 }
 
                                 Rectangle {
@@ -518,447 +576,418 @@ ApplicationWindow {
                                 }
 
                                 Text {
-                                    visible: treeDelegate.model.childCount !== undefined && treeDelegate.model.childCount > 0
+                                    visible: treeDelegate.model.childCount !== undefined
                                     text: treeDelegate.model.childCount !== undefined ? treeDelegate.model.childCount : ""
                                     color: root.mutedColor
                                     font.family: Notes.AppBackend.displayFontFamily
                                     font.pointSize: 10
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            TapHandler {
+                                enabled: treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
+                                onTapped: {
+                                    root.selectedTreeRow = treeDelegate.row
+                                    Notes.AppBackend.activateTreeItem(treeDelegate.model.itemType ? treeDelegate.model.itemType : 0,
+                                                                      treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1)
                                 }
                             }
                         }
-
-                        TapHandler {
-                            enabled: treeDelegate.model.itemType !== 3 && treeDelegate.model.itemType !== 4
-                            onTapped: {
-                                root.selectedTreeRow = treeDelegate.row
-                                Notes.AppBackend.activateTreeItem(treeDelegate.model.itemType ? treeDelegate.model.itemType : 0,
-                                                                  treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1)
-                            }
-                        }
                     }
+                }
+
+                VerticalDivider {
+                    Layout.fillHeight: true
                 }
             }
         }
 
         Rectangle {
             visible: !Notes.AppBackend.noteListCollapsed
-            SplitView.preferredWidth: 292
             color: root.panelBackground
+            SplitView.minimumWidth: 185
+            SplitView.preferredWidth: 185
 
-            ColumnLayout {
+            RowLayout {
                 anchors.fill: parent
                 spacing: 0
 
-                Rectangle {
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 0
+
+                    Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 48
-                        color: root.panelBackground
-                        border.color: root.edgeColor
-                        border.width: 1
+                        Layout.preferredHeight: 0
+                    }
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 12
-                            spacing: 10
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 35
+                        spacing: 0
 
-                            IconButton {
-                                icon: Notes.AppBackend.folderTreeCollapsed ? fontIconLoader.icons.fa_arrow_right_to_line
-                                                                           : fontIconLoader.icons.fa_arrow_left_to_line
-                                themeData: root.themeData
-                                themeColor: Notes.AppBackend.folderTreeCollapsed ? root.mutedColor : root.titleColor
-                                platform: Notes.AppBackend.platformName
-                                onClicked: Notes.AppBackend.folderTreeCollapsed ? Notes.AppBackend.expandFolderTree()
-                                                                                : Notes.AppBackend.collapseFolderTree()
-                            }
+                        Item {
+                            Layout.preferredWidth: 2
+                        }
 
-                            Text {
-                                Layout.fillWidth: true
-                                text: Notes.AppBackend.listLabel1
-                                color: root.titleColor
-                                font.family: Notes.AppBackend.displayFontFamily
-                                font.pointSize: 11
-                                font.bold: true
-                                elide: Text.ElideRight
-                            }
+                        ToolGlyphButton {
+                            glyph: Notes.AppBackend.folderTreeCollapsed ? root.iconMaterialPaneClosed : root.iconMaterialPaneOpen
+                            fontFamily: fontIconLoader.mt_symbols
+                            pointSize: Notes.AppBackend.platformName === "Apple" ? 21 : 18
+                            onClicked: Notes.AppBackend.folderTreeCollapsed ? Notes.AppBackend.expandFolderTree()
+                                                                            : Notes.AppBackend.collapseFolderTree()
+                        }
 
-                            Text {
-                                text: Notes.AppBackend.listLabel2
-                                color: root.mutedColor
-                                font.family: Notes.AppBackend.displayFontFamily
-                                font.pointSize: 10
-                            }
+                        Item {
+                            Layout.preferredWidth: 10
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: Notes.AppBackend.listLabel1
+                            color: root.titleColor
+                            font.family: Notes.AppBackend.displayFontFamily
+                            font.pointSize: Notes.AppBackend.platformName === "Apple" ? 13 : 10
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+
+                        Item {
+                            Layout.preferredWidth: 10
+                        }
+
+                        Text {
+                            Layout.preferredWidth: 40
+                            Layout.alignment: Qt.AlignVCenter
+                            text: Notes.AppBackend.listLabel2
+                            color: root.mutedColor
+                            font.family: Notes.AppBackend.displayFontFamily
+                            font.pointSize: Notes.AppBackend.platformName === "Apple" ? 13 : 10
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        Item {
+                            Layout.preferredWidth: 12
                         }
                     }
 
-                    Rectangle {
+                    Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 44
-                        color: root.panelBackground
-                        border.color: root.edgeColor
-                        border.width: 1
+                        Layout.preferredHeight: 2
+                    }
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 8
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 25
+                        spacing: 0
 
-                            Rectangle {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 30
-                                radius: 8
-                                color: root.searchBackground
-                                border.color: root.edgeColor
-                                border.width: 1
+                        Item {
+                            Layout.preferredWidth: 10
+                        }
 
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 10
-                                    anchors.rightMargin: 8
-                                    spacing: 8
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 22
+                            radius: 3
+                            color: root.searchBackground
+                            border.width: searchField.activeFocus ? 2 : 1
+                            border.color: searchField.activeFocus ? "#3d9bda" : root.searchBorderColor
 
-                                    Text {
-                                        text: fontIconLoader.icons.fa_magnifying_glass
-                                        color: root.mutedColor
-                                        font.family: fontIconLoader.fa_solid
-                                        font.pointSize: 10
-                                    }
+                            Text {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 6
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: root.iconSearch
+                                font.family: fontIconLoader.fa_solid
+                                font.pointSize: 9
+                                color: root.mutedColor
+                            }
 
-                                    Item {
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
+                            TextInput {
+                                id: searchField
+                                anchors.fill: parent
+                                anchors.leftMargin: 21
+                                anchors.rightMargin: 19
+                                verticalAlignment: TextInput.AlignVCenter
+                                clip: true
+                                selectByMouse: true
+                                color: root.titleColor
+                                font.family: Notes.AppBackend.displayFontFamily
+                                font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 10
+                                onTextChanged: Notes.AppBackend.searchText = text
+                            }
 
-                                        TextInput {
-                                            id: searchField
-                                            anchors.fill: parent
-                                            verticalAlignment: TextInput.AlignVCenter
-                                            color: root.titleColor
-                                            font.family: Notes.AppBackend.displayFontFamily
-                                            font.pointSize: 10
-                                            selectByMouse: true
-                                            clip: true
-                                            onTextChanged: Notes.AppBackend.searchText = text
-                                        }
+                            Text {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 21
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: searchField.text.length === 0
+                                text: qsTr("Search")
+                                color: root.mutedColor
+                                font.family: Notes.AppBackend.displayFontFamily
+                                font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 10
+                            }
 
-                                        Text {
-                                            anchors.fill: parent
-                                            verticalAlignment: Text.AlignVCenter
-                                            text: qsTr("Search")
-                                            color: root.mutedColor
-                                            font.family: Notes.AppBackend.displayFontFamily
-                                            font.pointSize: 10
-                                            visible: searchField.text.length === 0
-                                        }
-                                    }
+                            Text {
+                                anchors.right: parent.right
+                                anchors.rightMargin: 7
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: searchField.text.length > 0
+                                text: root.iconCloseSmall
+                                font.family: fontIconLoader.fa_solid
+                                font.pointSize: 9
+                                color: root.mutedColor
 
-                                    Text {
-                                        visible: searchField.text.length > 0
-                                        text: fontIconLoader.icons.fa_xmark
-                                        color: root.mutedColor
-                                        font.family: fontIconLoader.fa_solid
-                                        font.pointSize: 10
-
-                                        TapHandler {
-                                            onTapped: {
-                                                searchField.text = ""
-                                                Notes.AppBackend.clearSearch()
-                                            }
-                                        }
+                                TapHandler {
+                                    onTapped: {
+                                        searchField.text = ""
+                                        Notes.AppBackend.clearSearch()
                                     }
                                 }
                             }
-
-                            IconButton {
-                                icon: fontIconLoader.icons.fa_plus
-                                enabled: Notes.AppBackend.canCreateNotes
-                                themeData: root.themeData
-                                themeColor: root.accentColor
-                                platform: Notes.AppBackend.platformName
-                                onClicked: Notes.AppBackend.createNewNote()
-                            }
                         }
-                }
 
-                ListView {
+                        Item {
+                            Layout.preferredWidth: 10
+                        }
+
+                        ToolGlyphButton {
+                            glyph: root.iconPlus
+                            fontFamily: fontIconLoader.fa_solid
+                            pointSize: Notes.AppBackend.platformName === "Apple" ? 18 : 13
+                            enabled: Notes.AppBackend.canCreateNotes
+                            onClicked: Notes.AppBackend.createNewNote()
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 9
+                    }
+
+                    ListView {
                         id: noteList
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         clip: true
-                        spacing: 8
+                        spacing: 0
                         model: Notes.AppBackend.noteModel
-                        topMargin: 10
-                        bottomMargin: 10
-                        leftMargin: 10
-                        rightMargin: 10
 
                         delegate: Item {
                             id: noteDelegate
                             required property var model
                             required property int index
-                            width: noteList.width - 20
-                            height: 84
+                            width: noteList.width
+                            height: 68
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 12
-                                color: noteDelegate.model.noteId === Notes.AppBackend.noteEditor.currentNoteId ? root.selectedColor
-                                                                                                               : root.noteCardBackground
-                                border.color: noteDelegate.model.noteId === Notes.AppBackend.noteEditor.currentNoteId ? root.accentColor
-                                                                                                                        : root.edgeColor
-                                border.width: 1
+                                color: noteDelegate.model.noteId === Notes.AppBackend.noteEditor.currentNoteId ? root.selectedColor : "transparent"
+                            }
 
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 12
+                            Column {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 10
+                                anchors.topMargin: 8
+                                spacing: 2
+
+                                RowLayout {
+                                    width: parent.width
                                     spacing: 4
 
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 8
-
-                                        Text {
-                                            Layout.fillWidth: true
-                                            text: noteDelegate.model.noteFullTitle ? noteDelegate.model.noteFullTitle : qsTr("Untitled")
-                                            color: root.titleColor
-                                            font.family: Notes.AppBackend.displayFontFamily
-                                            font.pointSize: 11
-                                            font.bold: true
-                                            elide: Text.ElideRight
-                                        }
-
-                                        Text {
-                                            visible: noteDelegate.model.noteIsPinned
-                                            text: fontIconLoader.icons.fa_thumbtack
-                                            color: root.accentColor
-                                            font.family: fontIconLoader.fa_solid
-                                            font.pointSize: 9
-                                        }
-
-                                        Text {
-                                            text: noteDelegate.model.noteLastModificationDateTime ? noteDelegate.model.noteLastModificationDateTime.toLocaleString(Qt.locale(), Locale.ShortFormat) : ""
-                                            color: root.mutedColor
-                                            font.family: Notes.AppBackend.displayFontFamily
-                                            font.pointSize: 9
-                                        }
-                                    }
-
                                     Text {
                                         Layout.fillWidth: true
-                                        text: root.notePreviewText(noteDelegate.model.noteContent,
-                                                                   noteDelegate.model.noteFullTitle,
-                                                                   noteDelegate.model.noteParentName)
-                                        color: root.mutedColor
+                                        text: noteDelegate.model.noteFullTitle ? noteDelegate.model.noteFullTitle : qsTr("Untitled")
+                                        color: root.titleColor
                                         font.family: Notes.AppBackend.displayFontFamily
-                                        font.pointSize: 10
+                                        font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 10
+                                        font.bold: true
                                         elide: Text.ElideRight
                                     }
 
                                     Text {
-                                        Layout.fillWidth: true
-                                        text: noteDelegate.model.noteParentName ? noteDelegate.model.noteParentName : ""
-                                        color: root.mutedColor
-                                        font.family: Notes.AppBackend.displayFontFamily
+                                        visible: noteDelegate.model.noteIsPinned
+                                        text: fontIconLoader.icons.fa_thumbtack
+                                        font.family: fontIconLoader.fa_solid
                                         font.pointSize: 9
-                                        elide: Text.ElideRight
-                                        visible: text.length > 0
+                                        color: root.accentColor
                                     }
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    text: noteDelegate.model.noteLastModificationDateTime ? noteDelegate.model.noteLastModificationDateTime.toLocaleTimeString(Qt.locale(), Locale.ShortFormat) : ""
+                                    color: root.titleColor
+                                    font.family: Notes.AppBackend.displayFontFamily
+                                    font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    text: root.notePreviewText(noteDelegate.model.noteContent,
+                                                               noteDelegate.model.noteFullTitle,
+                                                               noteDelegate.model.noteParentName)
+                                    color: root.mutedColor
+                                    font.family: Notes.AppBackend.displayFontFamily
+                                    font.pointSize: Notes.AppBackend.platformName === "Apple" ? 11 : 9
+                                    elide: Text.ElideRight
                                 }
                             }
 
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                preventStealing: false
+                            TapHandler {
+                                acceptedButtons: Qt.LeftButton
+                                onTapped: Notes.AppBackend.selectNoteRow(noteDelegate.index)
+                            }
 
-                                onClicked: function(mouse) {
+                            TapHandler {
+                                acceptedButtons: Qt.RightButton
+                                onTapped: function(eventPoint) {
                                     Notes.AppBackend.selectNoteRow(noteDelegate.index)
-
-                                    if (mouse.button === Qt.RightButton) {
-                                        root.openNoteContextMenu(noteDelegate, mouse.x, mouse.y)
-                                    }
+                                    var pos = eventPoint.position
+                                    root.openNoteContextMenu(noteDelegate, pos.x, pos.y)
                                 }
                             }
                         }
+                    }
+                }
+
+                VerticalDivider {
+                    Layout.fillHeight: true
                 }
             }
         }
 
         Rectangle {
-            SplitView.fillWidth: true
             color: root.panelBackground
+            SplitView.fillWidth: true
 
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 0
 
-                Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 48
-                        color: root.panelBackground
-                        border.color: root.edgeColor
-                        border.width: 1
-
-                        Item {
-                            anchors.fill: parent
-
-                            Row {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 14
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 6
-
-                                IconButton {
-                                    icon: Notes.AppBackend.folderTreeCollapsed ? fontIconLoader.icons.fa_arrow_right_to_line
-                                                                               : fontIconLoader.icons.fa_arrow_left_to_line
-                                    themeData: root.themeData
-                                    themeColor: Notes.AppBackend.folderTreeCollapsed ? root.mutedColor : root.titleColor
-                                    platform: Notes.AppBackend.platformName
-                                    onClicked: Notes.AppBackend.folderTreeCollapsed ? Notes.AppBackend.expandFolderTree()
-                                                                                    : Notes.AppBackend.collapseFolderTree()
-                                }
-
-                                IconButton {
-                                    icon: Notes.AppBackend.noteListCollapsed ? fontIconLoader.icons.fa_arrow_right_to_line
-                                                                             : fontIconLoader.icons.fa_arrow_left_to_line
-                                    themeData: root.themeData
-                                    themeColor: Notes.AppBackend.noteListCollapsed ? root.mutedColor : root.titleColor
-                                    platform: Notes.AppBackend.platformName
-                                    onClicked: Notes.AppBackend.noteListCollapsed ? Notes.AppBackend.expandNoteList()
-                                                                                  : Notes.AppBackend.collapseNoteList()
-                                }
-
-                                IconButton {
-                                    icon: fontIconLoader.icons.fa_file_lines
-                                    themeData: root.themeData
-                                    themeColor: Notes.AppBackend.kanbanVisible ? root.mutedColor : root.accentColor
-                                    platform: Notes.AppBackend.platformName
-                                    onClicked: Notes.AppBackend.setKanbanVisibility(false)
-                                }
-
-                                IconButton {
-                                    icon: fontIconLoader.icons.fa_table_columns
-                                    themeData: root.themeData
-                                    themeColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
-                                    platform: Notes.AppBackend.platformName
-                                    onClicked: Notes.AppBackend.setKanbanVisibility(true)
-                                }
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: Notes.AppBackend.noteEditor.currentNoteId === -1 ? qsTr("No note selected")
-                                                                                       : Notes.AppBackend.noteEditor.editorDateLabel
-                                color: root.mutedColor
-                                font.family: Notes.AppBackend.displayFontFamily
-                                font.pointSize: 10
-                                font.bold: true
-                            }
-
-                            Row {
-                                anchors.right: parent.right
-                                anchors.rightMargin: 14
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 6
-
-                                IconButton {
-                                    id: editorMenuButton
-                                    icon: fontIconLoader.icons.fa_ellipsis_h
-                                    themeData: root.themeData
-                                    themeColor: root.accentColor
-                                    platform: Notes.AppBackend.platformName
-                                    onClicked: root.toggleEditorSettings(editorMenuButton)
-                                }
-                            }
-                        }
-                }
-
-                Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: tagRepeater.count > 0 && !Notes.AppBackend.kanbanVisible ? 36 : 0
-                        color: root.headerBackground
-                        border.color: root.edgeColor
-                        border.width: tagRepeater.count > 0 && !Notes.AppBackend.kanbanVisible ? 1 : 0
-                        visible: height > 0
-
-                        Flickable {
-                            anchors.fill: parent
-                            anchors.leftMargin: 14
-                            anchors.rightMargin: 14
-                            contentWidth: tagRow.width
-                            contentHeight: parent.height
-                            flickableDirection: Flickable.HorizontalFlick
-                            clip: true
-
-                            Row {
-                                id: tagRow
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 8
-
-                                Repeater {
-                                    id: tagRepeater
-                                    model: Notes.AppBackend.noteEditor.tagListModel
-
-                                    delegate: Rectangle {
-                                        id: tagDelegate
-                                        required property var model
-                                        radius: 10
-                                        color: tagDelegate.model.tagColor ? tagDelegate.model.tagColor : root.accentColor
-                                        opacity: 0.16
-                                        implicitHeight: 22
-                                        implicitWidth: tagLabel.implicitWidth + 16
-
-                                        Text {
-                                            id: tagLabel
-                                            anchors.centerIn: parent
-                                            text: tagDelegate.model.tagName ? tagDelegate.model.tagName : ""
-                                            color: root.titleColor
-                                            font.family: Notes.AppBackend.displayFontFamily
-                                            font.pointSize: 9
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 5
                 }
 
                 Item {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 25
 
-                        ScrollView {
-                            id: editorScroll
-                            anchors.fill: parent
-                            visible: !Notes.AppBackend.kanbanVisible
-                            clip: true
+                    RowLayout {
+                        anchors.fill: parent
+                        spacing: 0
 
-                            contentWidth: availableWidth
+                        Item {
+                            Layout.preferredWidth: 24
+                        }
 
-                            Connections {
-                                target: root.editorFlickable ? root.editorFlickable : null
+                        ToolGlyphButton {
+                            buttonWidth: 33
+                            buttonHeight: 25
+                            glyph: root.iconMaterialArticle
+                            fontFamily: fontIconLoader.mt_symbols
+                            pointSize: Notes.AppBackend.platformName === "Apple" ? 20 : 17
+                            glyphColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
+                            enabled: !Notes.AppBackend.kanbanVisible
+                            hoverEnabled: !Notes.AppBackend.kanbanVisible
+                            onClicked: Notes.AppBackend.setKanbanVisibility(false)
+                        }
 
-                                function onContentYChanged() {
-                                    Notes.AppBackend.noteEditor.setScrollBarPosition(Math.round(root.editorFlickable.contentY))
-                                }
+                        Item {
+                            Layout.preferredWidth: 15
+                        }
+
+                        ToolGlyphButton {
+                            buttonWidth: 33
+                            buttonHeight: 25
+                            glyph: root.iconMaterialKanban
+                            fontFamily: fontIconLoader.mt_symbols
+                            pointSize: Notes.AppBackend.platformName === "Apple" ? 20 : 17
+                            glyphColor: Notes.AppBackend.kanbanVisible ? root.mutedColor : root.accentColor
+                            enabled: !Notes.AppBackend.currentContextIsTrash
+                            onClicked: Notes.AppBackend.setKanbanVisibility(true)
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: Notes.AppBackend.noteEditor.currentNoteId === -1 ? "" : Notes.AppBackend.noteEditor.editorDateLabel
+                            color: root.mutedColor
+                            font.family: Notes.AppBackend.displayFontFamily
+                            font.pointSize: Notes.AppBackend.platformName === "Apple" ? 12 : 9
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
+                        Item {
+                            Layout.fillWidth: true
+                        }
+
+                        ToolGlyphButton {
+                            id: editorMenuButton
+                            glyph: root.iconMaterialMore
+                            fontFamily: fontIconLoader.mt_symbols
+                            pointSize: Notes.AppBackend.platformName === "Apple" ? 23 : 20
+                            onClicked: root.toggleEditorSettings(editorMenuButton)
+                        }
+
+                        Item {
+                            Layout.preferredWidth: 24
+                        }
+                    }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 6
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    ScrollView {
+                        id: editorScroll
+                        anchors.fill: parent
+                        visible: !Notes.AppBackend.kanbanVisible
+                        clip: true
+                        contentWidth: availableWidth
+
+                        Connections {
+                            target: root.editorFlickable ? root.editorFlickable : null
+
+                            function onContentYChanged() {
+                                Notes.AppBackend.noteEditor.setScrollBarPosition(Math.round(root.editorFlickable.contentY))
                             }
+                        }
 
                         Item {
                             id: editorCanvas
                             width: editorScroll.availableWidth
-                            implicitHeight: editorArea.implicitHeight + 56
+                            implicitHeight: Math.max(editorArea.implicitHeight + 56, editorScroll.availableHeight)
 
                             TextArea {
                                 id: editorArea
-                                width: Notes.AppBackend.textFullWidth ? editorCanvas.width - 64
-                                                                      : Math.min(editorCanvas.width - 64, Notes.AppBackend.textColumnWidth)
+                                width: Notes.AppBackend.textFullWidth ? Math.max(0, editorCanvas.width - 48)
+                                                                      : Math.min(Math.max(0, editorCanvas.width - 48),
+                                                                                 Notes.AppBackend.textColumnWidth)
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top
-                                anchors.topMargin: 28
                                 wrapMode: TextArea.Wrap
                                 selectByMouse: true
-                                readOnly: Notes.AppBackend.noteEditor.readOnly
                                 persistentSelection: true
-                                placeholderText: qsTr("Start writing…")
+                                readOnly: Notes.AppBackend.noteEditor.readOnly
+                                placeholderText: qsTr("Start writing...")
                                 placeholderTextColor: root.mutedColor
                                 color: root.titleColor
                                 padding: 0
@@ -966,24 +995,71 @@ ApplicationWindow {
                                 font.pointSize: Notes.AppBackend.editorFontPointSize
                                 textFormat: TextEdit.PlainText
                                 background: Rectangle {
-                                        color: "transparent"
-                                    }
+                                    color: "transparent"
+                                }
 
-                                    Component.onCompleted: Notes.AppBackend.noteEditor.attachTextDocument(textDocument)
+                                Component.onCompleted: Notes.AppBackend.noteEditor.attachTextDocument(textDocument)
 
-                                    onTextChanged: {
-                                        if (!root.editorSyncing) {
-                                            Notes.AppBackend.noteEditor.setCurrentText(text)
-                                        }
+                                onTextChanged: {
+                                    if (!root.editorSyncing) {
+                                        Notes.AppBackend.noteEditor.setCurrentText(text)
                                     }
                                 }
                             }
                         }
+                    }
 
-                        KanbanBoard {
-                            anchors.fill: parent
-                            visible: Notes.AppBackend.kanbanVisible
+                    KanbanBoard {
+                        anchors.fill: parent
+                        visible: Notes.AppBackend.kanbanVisible
+                    }
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: tagRepeater.count > 0 && !Notes.AppBackend.kanbanVisible ? 33 : 0
+                    color: root.headerBackground
+                    visible: height > 0
+
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        contentWidth: tagRow.width
+                        contentHeight: parent.height
+                        clip: true
+                        flickableDirection: Flickable.HorizontalFlick
+
+                        Row {
+                            id: tagRow
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 8
+
+                            Repeater {
+                                id: tagRepeater
+                                model: Notes.AppBackend.noteEditor.tagListModel
+
+                                delegate: Rectangle {
+                                    id: tagDelegate
+                                    required property var model
+                                    radius: 10
+                                    color: tagDelegate.model.tagColor ? tagDelegate.model.tagColor : root.accentColor
+                                    opacity: 0.16
+                                    implicitHeight: 20
+                                    implicitWidth: tagLabel.implicitWidth + 16
+
+                                    Text {
+                                        id: tagLabel
+                                        anchors.centerIn: parent
+                                        text: tagDelegate.model.tagName ? tagDelegate.model.tagName : ""
+                                        color: root.titleColor
+                                        font.family: Notes.AppBackend.displayFontFamily
+                                        font.pointSize: 9
+                                    }
+                                }
+                            }
                         }
+                    }
                 }
             }
         }
