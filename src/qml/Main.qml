@@ -103,8 +103,8 @@ ApplicationWindow {
         editorSettingsPopup.open()
     }
 
-    function openNoteContextMenu(anchorItem, localX, localY) {
-        var pos = anchorItem.mapToItem(root.contentItem, localX, localY)
+    function openNoteContextMenu(anchorItem, X, Y) {
+        var pos = anchorItem.mapToItem(root.contentItem, X, Y)
         noteContextMenu.x = Math.max(8, Math.round(pos.x))
         noteContextMenu.y = Math.max(8, Math.round(pos.y))
         noteContextMenu.open()
