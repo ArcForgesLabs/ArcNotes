@@ -28,11 +28,16 @@ ApplicationWindow {
     property bool editorSyncing: false
     property var editorFlickable: editorScroll.contentItem
 
+    Notes.UpdateBackend {
+        id: updateBackend
+    }
+
     Component.onCompleted: {
         searchField.text = Notes.AppBackend.searchText
         editorArea.text = Notes.AppBackend.noteEditor.currentText
         Notes.AppBackend.publishState()
         Notes.AppBackend.updateWindowMetrics(width, height, x, y)
+        updateBackend.checkForUpdates(false)
     }
 
     onWidthChanged: Notes.AppBackend.updateWindowMetrics(width, height, x, y)
@@ -90,6 +95,18 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: updateBackend
+
+        function onDialogVisibleChanged() {
+            if (updateBackend.dialogVisible) {
+                updaterDialog.open()
+            } else {
+                updaterDialog.close()
+            }
+        }
+    }
+
     Dialog {
         id: errorDialog
         modal: true
@@ -118,6 +135,36 @@ ApplicationWindow {
         themeName: root.themeData.theme
         applicationName: Qt.application.name ? Qt.application.name : "ArcNotes"
         applicationVersion: Qt.application.version ? Qt.application.version : "0.0.0"
+    }
+
+    UpdaterDialog {
+        id: updaterDialog
+        x: Math.round((root.width - width) / 2)
+        y: Math.round((root.height - height) / 2)
+        displayFontFamily: Notes.AppBackend.displayFontFamily
+        themeName: root.themeData.theme
+        titleText: updateBackend.titleText
+        installedVersion: updateBackend.installedVersion
+        availableVersion: updateBackend.availableVersion
+        changelogHtml: updateBackend.changelogHtml
+        showProgressControls: updateBackend.showProgressControls
+        progressIndeterminate: updateBackend.progressIndeterminate
+        progressValue: updateBackend.progressValue
+        downloadLabelText: updateBackend.downloadLabelText
+        timeRemainingText: updateBackend.timeRemainingText
+        dontNotifyAutomatically: updateBackend.dontNotifyAutomatically
+        updateButtonEnabled: updateBackend.updateButtonEnabled
+
+        onUpdateRequested: updateBackend.requestUpdate()
+        onCloseRequested: updateBackend.closeDialog()
+        onDontNotifyAutomaticallyToggled: function(checked) {
+            updateBackend.dontNotifyAutomatically = checked
+        }
+        onClosed: {
+            if (updateBackend.dialogVisible) {
+                updateBackend.closeDialog()
+            }
+        }
     }
 
     Popup {
@@ -207,6 +254,12 @@ ApplicationWindow {
                             editorSettingsPopup.open()
                         }
                     }
+                }
+
+                Button {
+                    text: qsTr("Updates")
+                    visible: updateBackend.enabled
+                    onClicked: updateBackend.checkForUpdates(true)
                 }
 
                 Button {

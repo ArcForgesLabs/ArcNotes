@@ -28,15 +28,12 @@ project(
   DESCRIPTION "Note-taking app. Write down your thoughts"
   LANGUAGES CXX)
 
-include(CTest)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Embed MSVC/UCRT/SDK system include paths into compile_commands.json so that
@@ -83,7 +80,6 @@ set(QT_COMPONENTS
     Network
     Qml
     Sql
-    Test
     Quick
     QuickControls2)
 
@@ -148,8 +144,7 @@ if(GIT_REVISION)
 endif()
 
 set(QRC_SOURCES ${PROJECT_SOURCE_DIR}/src/fonts.qrc
-                ${PROJECT_SOURCE_DIR}/src/images.qrc
-                ${PROJECT_SOURCE_DIR}/src/styles.qrc)
+                ${PROJECT_SOURCE_DIR}/src/images.qrc)
 
 qt_add_resources(QRC_GENERATED_SOURCES ${QRC_SOURCES})
 
@@ -184,7 +179,14 @@ set(QML_CXX_SOURCES
     ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.cpp
     ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.h
     ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.cpp
-    ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.h)
+    ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.h
+    ${PROJECT_SOURCE_DIR}/src/updatebackend.cpp
+    ${PROJECT_SOURCE_DIR}/src/updatebackend.h)
+
+set(UPDATE_CHECKER_DEFINE 0)
+if(UPDATE_CHECKER)
+  set(UPDATE_CHECKER_DEFINE 1)
+endif()
 
 if(APPLE)
   list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/images/notes_icon.icns)
@@ -200,7 +202,8 @@ target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_compile_definitions(
   ${APP_TARGET}
   PUBLIC APP_VERSION="${PROJECT_VERSION}${GIT_REV}" APP_ID="${APP_ID}"
-         QT_DISABLE_DEPRECATED_BEFORE=0x050900)
+         QT_DISABLE_DEPRECATED_BEFORE=0x050900
+         UPDATE_CHECKER=${UPDATE_CHECKER_DEFINE})
 
 # Enable useful compiler warnings (except on third-party code).
 if(MSVC)
@@ -525,7 +528,3 @@ install(
   RUNTIME DESTINATION bin
   BUNDLE DESTINATION bin
   LIBRARY DESTINATION lib)
-
-if(BUILD_TESTING)
-  add_subdirectory(tests)
-endif()
