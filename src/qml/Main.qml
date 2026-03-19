@@ -159,7 +159,9 @@ ApplicationWindow {
 
     function openNoteContextMenu(anchorItem, X, Y) {
         var pos = anchorItem.mapToItem(root.contentItem, X, Y)
-        noteContextMenu.popup(Math.max(8, Math.round(pos.x)), Math.max(8, Math.round(pos.y)))
+        noteContextMenu.x = Math.max(8, Math.round(pos.x))
+        noteContextMenu.y = Math.max(8, Math.round(pos.y))
+        noteContextMenu.open()
     }
 
     function requestDeleteCurrentNote() {
@@ -380,46 +382,77 @@ ApplicationWindow {
         }
     }
 
-    Menu {
+    Popup {
         id: noteContextMenu
-
-        MenuItem {
-            visible: Notes.AppBackend.currentContextIsTrash
-            text: qsTr("Restore Note")
-            onTriggered: Notes.AppBackend.restoreCurrentNote()
+        parent: Overlay.overlay
+        width: 196
+        padding: 0
+        modal: false
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            color: root.darkTheme ? "#232323" : "#ffffff"
+            border.color: root.darkTheme ? "#3f3f3f" : "#c7c7c7"
+            border.width: 1
+            radius: 4
         }
 
-        MenuItem {
-            text: Notes.AppBackend.currentContextIsTrash ? qsTr("Delete Note") : qsTr("Move To Trash")
-            onTriggered: root.requestDeleteCurrentNote()
-        }
+        contentItem: Column {
+            spacing: 0
 
-        MenuSeparator {
-            visible: pinNoteMenuItem.visible || unpinNoteMenuItem.visible
-        }
+            ContextMenuItem {
+                visible: Notes.AppBackend.currentContextIsTrash
+                text: qsTr("Restore Note")
+                onTriggered: {
+                    noteContextMenu.close()
+                    Notes.AppBackend.restoreCurrentNote()
+                }
+            }
 
-        MenuItem {
-            id: pinNoteMenuItem
-            visible: Notes.AppBackend.currentContextAllowsPinning && !Notes.AppBackend.currentNotePinned
-            text: qsTr("Pin Note")
-            onTriggered: Notes.AppBackend.setCurrentNotePinned(true)
-        }
+            ContextMenuItem {
+                text: Notes.AppBackend.currentContextIsTrash ? qsTr("Delete Note") : qsTr("Move To Trash")
+                onTriggered: {
+                    noteContextMenu.close()
+                    root.requestDeleteCurrentNote()
+                }
+            }
 
-        MenuItem {
-            id: unpinNoteMenuItem
-            visible: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.currentNotePinned
-            text: qsTr("Unpin Note")
-            onTriggered: Notes.AppBackend.setCurrentNotePinned(false)
-        }
+            ContextMenuSeparator {
+                visible: Notes.AppBackend.currentContextAllowsPinning && (pinNoteMenuItem.visible || unpinNoteMenuItem.visible)
+            }
 
-        MenuSeparator {
-            visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
-        }
+            ContextMenuItem {
+                id: pinNoteMenuItem
+                visible: Notes.AppBackend.currentContextAllowsPinning && !Notes.AppBackend.currentNotePinned
+                text: qsTr("Pin Note")
+                onTriggered: {
+                    noteContextMenu.close()
+                    Notes.AppBackend.setCurrentNotePinned(true)
+                }
+            }
 
-        MenuItem {
-            visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
-            text: qsTr("New Note")
-            onTriggered: Notes.AppBackend.createNewNote()
+            ContextMenuItem {
+                id: unpinNoteMenuItem
+                visible: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.currentNotePinned
+                text: qsTr("Unpin Note")
+                onTriggered: {
+                    noteContextMenu.close()
+                    Notes.AppBackend.setCurrentNotePinned(false)
+                }
+            }
+
+            ContextMenuSeparator {
+                visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
+            }
+
+            ContextMenuItem {
+                visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
+                text: qsTr("New Note")
+                onTriggered: {
+                    noteContextMenu.close()
+                    Notes.AppBackend.createNewNote()
+                }
+            }
         }
     }
 
@@ -467,6 +500,48 @@ ApplicationWindow {
     component VerticalDivider: Rectangle {
         implicitWidth: 1
         color: root.edgeColor
+    }
+
+    component ContextMenuSeparator: Rectangle {
+        implicitWidth: 196
+        implicitHeight: 1
+        color: root.edgeColor
+    }
+
+    component ContextMenuItem: Rectangle {
+        id: contextMenuItem
+        property string text: ""
+        property bool enabled: true
+        property bool hovered: false
+        signal triggered
+
+        implicitWidth: 196
+        implicitHeight: 30
+        color: contextMenuItem.hovered && contextMenuItem.enabled ? (root.darkTheme ? "#253445" : "#d8eaf5") : "transparent"
+
+        Text {
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            anchors.right: parent.right
+            anchors.rightMargin: 12
+            anchors.verticalCenter: parent.verticalCenter
+            text: contextMenuItem.text
+            color: contextMenuItem.enabled ? root.titleColor : root.mutedColor
+            font.family: Notes.AppBackend.displayFontFamily
+            font.pointSize: 10
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        HoverHandler {
+            onHoveredChanged: contextMenuItem.hovered = hovered
+        }
+
+        TapHandler {
+            acceptedButtons: Qt.LeftButton
+            enabled: contextMenuItem.enabled
+            onTapped: contextMenuItem.triggered()
+        }
     }
 
     component NoteSectionHeader: Item {

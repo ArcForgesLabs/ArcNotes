@@ -388,7 +388,7 @@ void AppBackend::restoreCurrentNote() {
     NodeData defaultNotesFolder;
     QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
                               Q_RETURN_ARG(NodeData, defaultNotesFolder), Q_ARG(int, DEFAULT_NOTES_FOLDER_ID));
-    QMetaObject::invokeMethod(m_dbManager, "moveNode", Qt::QueuedConnection, Q_ARG(int, note.id()),
+    QMetaObject::invokeMethod(m_dbManager, "moveNode", Qt::BlockingQueuedConnection, Q_ARG(int, note.id()),
                               Q_ARG(NodeData, defaultNotesFolder));
 
     if (m_noteModel->rowCount() == 0) {
@@ -396,6 +396,7 @@ void AppBackend::restoreCurrentNote() {
         saveSelectedNote(INVALID_NODE_ID);
         m_noteEditor->closeEditor();
         emit currentNotePinnedChanged();
+        reloadCurrentContext(false, INVALID_NODE_ID);
         return;
     }
 
@@ -403,6 +404,7 @@ void AppBackend::restoreCurrentNote() {
         const int nextRow = std::min(removedRow, m_noteModel->rowCount() - 1);
         selectNoteIndex(m_noteModel->index(nextRow, 0));
     }
+    reloadCurrentContext(false, m_selectedNoteId);
 }
 
 void AppBackend::setCurrentNotePinned(bool isPinned) {
@@ -853,24 +855,27 @@ void AppBackend::onNoteEditClosed(const NodeData& note, bool selectNext) {
 void AppBackend::onDeleteNoteRequested(const NodeData& note) {
     const QModelIndex noteIndex = m_noteModel->getNoteIndex(note.id());
     if (!noteIndex.isValid()) {
-        emit requestRemoveNoteDb(note);
+        QMetaObject::invokeMethod(m_dbManager, "removeNote", Qt::BlockingQueuedConnection, Q_ARG(NodeData, note));
+        reloadCurrentContext(false, INVALID_NODE_ID);
         return;
     }
 
     const int removedRow = noteIndex.row();
     m_noteModel->removeNotes({noteIndex});
-    emit requestRemoveNoteDb(note);
+    QMetaObject::invokeMethod(m_dbManager, "removeNote", Qt::BlockingQueuedConnection, Q_ARG(NodeData, note));
 
     if (m_noteModel->rowCount() == 0) {
         m_selectedNoteId = INVALID_NODE_ID;
         saveSelectedNote(INVALID_NODE_ID);
         m_noteEditor->closeEditor();
         emit currentNotePinnedChanged();
+        reloadCurrentContext(false, INVALID_NODE_ID);
         return;
     }
 
     const int nextRow = std::min(removedRow, m_noteModel->rowCount() - 1);
     selectNoteIndex(m_noteModel->index(nextRow, 0));
+    reloadCurrentContext(false, m_selectedNoteId);
 }
 
 void AppBackend::moveNoteToTop(const NodeData& note) {
