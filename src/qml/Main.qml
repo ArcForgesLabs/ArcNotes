@@ -308,11 +308,13 @@ ApplicationWindow {
 
     Popup {
         id: editorSettingsPopup
+        parent: Overlay.overlay
         x: root.width - width - 20
         y: 72
         padding: 0
         modal: false
         focus: true
+        z: 1000
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
         background: Rectangle {
             color: "transparent"
@@ -974,7 +976,7 @@ ApplicationWindow {
                         Item {
                             id: editorCanvas
                             width: editorScroll.availableWidth
-                            implicitHeight: Math.max(editorArea.implicitHeight + 56, editorScroll.availableHeight)
+                            implicitHeight: Math.max(editorArea.implicitHeight + 62, editorScroll.availableHeight)
 
                             TextArea {
                                 id: editorArea
@@ -983,6 +985,7 @@ ApplicationWindow {
                                                                                  Notes.AppBackend.textColumnWidth)
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top
+                                anchors.topMargin: 6
                                 wrapMode: TextArea.Wrap
                                 selectByMouse: true
                                 persistentSelection: true
@@ -990,7 +993,10 @@ ApplicationWindow {
                                 placeholderText: qsTr("Start writing...")
                                 placeholderTextColor: root.mutedColor
                                 color: root.titleColor
-                                padding: 0
+                                topPadding: 2
+                                bottomPadding: 0
+                                leftPadding: 0
+                                rightPadding: 0
                                 font.family: Notes.AppBackend.editorFontFamily
                                 font.pointSize: Notes.AppBackend.editorFontPointSize
                                 textFormat: TextEdit.PlainText
