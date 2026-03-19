@@ -2,17 +2,21 @@
 #define NOTEEDITORBACKEND_H
 
 #include <QAbstractItemModel>
+#include <QColor>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMap>
 #include <QObject>
+#include <QPointer>
 #include <QTextDocument>
 #include <QTimer>
 #include <QVector>
 #include <QtQml/qqmlregistration.h>
 
+#include "editorsettingsoptions.h"
 #include "nodedata.h"
 
+class CustomMarkdownHighlighter;
 class DBManager;
 class TagListModel;
 class TagPool;
@@ -42,6 +46,7 @@ public:
     [[nodiscard]] int currentEditingNoteId() const;
 
     void setForcedReadOnly(bool forcedReadOnly);
+    void updateHighlightingTheme(Theme::Value theme, const QColor& textColor, qreal fontSize);
 
     Q_INVOKABLE void setCurrentText(const QString& text);
     Q_INVOKABLE void setScrollBarPosition(int value);
@@ -59,6 +64,7 @@ public:
     Q_INVOKABLE void addNewColumn(int startLinePosition, const QString& columnTitle);
     Q_INVOKABLE void removeColumn(int startLinePosition, int endLinePosition);
     Q_INVOKABLE void updateColumnTitle(int lineNumber, const QString& newText);
+    Q_INVOKABLE void attachTextDocument(QObject* textDocumentObject);
 
     void showTextView();
     void showKanbanView();
@@ -100,6 +106,8 @@ private:
     void setReadOnlyState(bool readOnlyState);
     void clearEditorState();
     void syncTextFromDocument(bool updateCurrentNote);
+    void refreshMarkdownHighlighter();
+    void clearDocumentHighlighting() const;
 
     static QDateTime getQDateTime(const QString& date);
     QMap<QString, int> getTaskDataInLine(const QString& line) const;
@@ -111,6 +119,8 @@ private:
     TagListModel* m_tagListModel;
     DBManager* m_dbManager;
     QTextDocument m_document;
+    QPointer<QTextDocument> m_attachedTextDocument;
+    CustomMarkdownHighlighter* m_highlighter;
     QVector<NodeData> m_currentNotes;
     QTimer m_autoSaveTimer;
     QString m_currentText;
@@ -119,6 +129,9 @@ private:
     bool m_markdownEnabled;
     bool m_forcedReadOnly;
     bool m_isContentModified;
+    Theme::Value m_highlightingTheme;
+    QColor m_highlightingTextColor;
+    qreal m_highlightingFontSize;
 };
 
 #endif  // NOTEEDITORBACKEND_H

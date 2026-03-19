@@ -11,8 +11,11 @@ QtObject {
     readonly property string fa_gear                    : "\uf013"
     readonly property string fa_folder                  : "\uf07b"
     readonly property string fa_note_sticky             : "\uf249"
+    readonly property string fa_file_lines              : "\uf15c"
     readonly property string fa_circle_info             : "\uf05a"
     readonly property string fa_sliders                 : "\uf1de"
+    readonly property string fa_table_columns           : "\uf0db"
+    readonly property string fa_thumbtack               : "\uf08d"
     readonly property string fa_arrow_left_to_line      : "\uf33e"
     readonly property string fa_arrow_right_to_line     : "\uf340"
     readonly property string fa_caret_right             : "\uf0da"
@@ -29,7 +32,4 @@ QtObject {
     readonly property string fa_circle_check            : "\uf058"
     readonly property string fa_face_sad_tear           : "\uf5b4"
     readonly property string fa_heart                   : "\uf004"
-
-    readonly property string mt_view_kanban             : "\ueb7f"
-    readonly property string mt_article                 : "\uef42"
 }

@@ -1,11 +1,14 @@
 #include "noteeditorbackend.h"
 
+#include <QColor>
 #include <QDateTime>
 #include <QLocale>
 #include <QTextBlock>
 #include <QTextCursor>
 #include <QTextStream>
+#include <QtQuick/qquicktextdocument.h>
 
+#include "custommarkdownhighlighter.h"
 #include "dbmanager.h"
 #include "taglistmodel.h"
 #include "tagpool.h"
@@ -18,10 +21,14 @@ NoteEditorBackend::NoteEditorBackend(TagPool* tagPool, DBManager* dbManager, QOb
     : QObject(parent),
       m_tagListModel(new TagListModel(this)),
       m_dbManager(dbManager),
+      m_highlighter(nullptr),
       m_scrollBarPosition(0),
       m_markdownEnabled(true),
       m_forcedReadOnly(false),
-      m_isContentModified(false) {
+      m_isContentModified(false),
+      m_highlightingTheme(Theme::Light),
+      m_highlightingTextColor(QStringLiteral("#2f2c26")),
+      m_highlightingFontSize(13.0) {
     m_tagListModel->setTagPool(tagPool);
     m_autoSaveTimer.setSingleShot(true);
     m_autoSaveTimer.setInterval(50);
@@ -50,6 +57,7 @@ void NoteEditorBackend::setMarkdownEnabled(bool enabled) {
         return;
     }
     m_markdownEnabled = enabled;
+    refreshMarkdownHighlighter();
     emit markdownEnabledChanged();
 }
 
@@ -78,6 +86,13 @@ void NoteEditorBackend::setForcedReadOnly(bool forcedReadOnly) {
     }
     m_forcedReadOnly = forcedReadOnly;
     emit readOnlyChanged();
+}
+
+void NoteEditorBackend::updateHighlightingTheme(Theme::Value theme, const QColor& textColor, qreal fontSize) {
+    m_highlightingTheme = theme;
+    m_highlightingTextColor = textColor;
+    m_highlightingFontSize = fontSize;
+    refreshMarkdownHighlighter();
 }
 
 void NoteEditorBackend::setCurrentText(const QString& text) {
@@ -543,6 +558,26 @@ void NoteEditorBackend::updateColumnTitle(int lineNumber, const QString& newText
     }
 }
 
+void NoteEditorBackend::attachTextDocument(QObject* textDocumentObject) {
+    auto* quickTextDocument = qobject_cast<QQuickTextDocument*>(textDocumentObject);
+    if (quickTextDocument == nullptr) {
+        return;
+    }
+
+    m_attachedTextDocument = quickTextDocument->textDocument();
+    if (m_attachedTextDocument == nullptr) {
+        return;
+    }
+
+    if (m_highlighter == nullptr) {
+        m_highlighter = new CustomMarkdownHighlighter(m_attachedTextDocument, MarkdownHighlighter::HighlightingOption::None);
+    } else {
+        m_highlighter->setDocument(m_attachedTextDocument);
+    }
+
+    refreshMarkdownHighlighter();
+}
+
 bool NoteEditorBackend::isInEditMode() const {
     return m_currentNotes.size() == 1;
 }
@@ -612,6 +647,37 @@ void NoteEditorBackend::clearEditorState() {
 
 void NoteEditorBackend::syncTextFromDocument(bool updateCurrentNote) {
     setEditorText(m_document.toPlainText(), updateCurrentNote);
+}
+
+void NoteEditorBackend::refreshMarkdownHighlighter() {
+    if (m_highlighter == nullptr) {
+        return;
+    }
+
+    m_highlighter->setTheme(m_highlightingTheme, m_highlightingTextColor, m_highlightingFontSize);
+    if (m_markdownEnabled && m_attachedTextDocument != nullptr) {
+        if (m_highlighter->document() != m_attachedTextDocument) {
+            m_highlighter->setDocument(m_attachedTextDocument);
+        }
+        m_highlighter->rehighlight();
+        return;
+    }
+
+    m_highlighter->setDocument(nullptr);
+    clearDocumentHighlighting();
+}
+
+void NoteEditorBackend::clearDocumentHighlighting() const {
+    if (m_attachedTextDocument == nullptr) {
+        return;
+    }
+
+    QTextCursor cursor(m_attachedTextDocument);
+    cursor.beginEditBlock();
+    cursor.select(QTextCursor::Document);
+    cursor.setCharFormat(QTextCharFormat());
+    cursor.clearSelection();
+    cursor.endEditBlock();
 }
 
 QDateTime NoteEditorBackend::getQDateTime(const QString& date) {

@@ -35,6 +35,7 @@ ApplicationWindow {
     property bool editorSyncing: false
     property int selectedTreeRow: -1
     property var editorFlickable: editorScroll.contentItem
+    property bool pendingPermanentDelete: false
 
     function cleanTextLine(line) {
         if (line === undefined || line === null) {
@@ -100,6 +101,23 @@ ApplicationWindow {
         }
 
         editorSettingsPopup.open()
+    }
+
+    function openNoteContextMenu(anchorItem, localX, localY) {
+        var pos = anchorItem.mapToItem(root.contentItem, localX, localY)
+        noteContextMenu.x = Math.max(8, Math.round(pos.x))
+        noteContextMenu.y = Math.max(8, Math.round(pos.y))
+        noteContextMenu.open()
+    }
+
+    function requestDeleteCurrentNote() {
+        if (Notes.AppBackend.currentContextIsTrash) {
+            pendingPermanentDelete = true
+            deleteDialog.open()
+            return
+        }
+
+        Notes.AppBackend.moveCurrentNoteToTrash()
     }
 
     Notes.UpdateBackend {
@@ -199,6 +217,35 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: deleteDialog
+        modal: true
+        width: 400
+        title: qsTr("Delete Note Permanently")
+        standardButtons: Dialog.Yes | Dialog.No
+
+        onAccepted: {
+            if (pendingPermanentDelete) {
+                Notes.AppBackend.moveCurrentNoteToTrash()
+            }
+            pendingPermanentDelete = false
+        }
+        onRejected: pendingPermanentDelete = false
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            width: parent.width
+
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: root.titleColor
+                font.family: Notes.AppBackend.displayFontFamily
+                text: qsTr("Are you sure you want to delete this note permanently? It will not be recoverable.")
+            }
+        }
+    }
+
     AboutDialog {
         id: aboutDialog
         x: Math.round((root.width - width) / 2)
@@ -256,6 +303,49 @@ ApplicationWindow {
         contentItem: EditorSettings {
             extraWidthPadding: 0
             extraHeightPadding: 0
+        }
+    }
+
+    Menu {
+        id: noteContextMenu
+
+        MenuItem {
+            visible: Notes.AppBackend.currentContextIsTrash
+            text: qsTr("Restore Note")
+            onTriggered: Notes.AppBackend.restoreCurrentNote()
+        }
+
+        MenuItem {
+            text: Notes.AppBackend.currentContextIsTrash ? qsTr("Delete Note") : qsTr("Move To Trash")
+            onTriggered: root.requestDeleteCurrentNote()
+        }
+
+        MenuSeparator {
+            visible: pinNoteMenuItem.visible || unpinNoteMenuItem.visible
+        }
+
+        MenuItem {
+            id: pinNoteMenuItem
+            visible: Notes.AppBackend.currentContextAllowsPinning && !Notes.AppBackend.currentNotePinned
+            text: qsTr("Pin Note")
+            onTriggered: Notes.AppBackend.setCurrentNotePinned(true)
+        }
+
+        MenuItem {
+            id: unpinNoteMenuItem
+            visible: Notes.AppBackend.currentContextAllowsPinning && Notes.AppBackend.currentNotePinned
+            text: qsTr("Unpin Note")
+            onTriggered: Notes.AppBackend.setCurrentNotePinned(false)
+        }
+
+        MenuSeparator {
+            visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
+        }
+
+        MenuItem {
+            visible: !Notes.AppBackend.currentContextIsTrash && Notes.AppBackend.canCreateNotes
+            text: qsTr("New Note")
+            onTriggered: Notes.AppBackend.createNewNote()
         }
     }
 
@@ -390,8 +480,18 @@ ApplicationWindow {
                                     implicitWidth: 8
                                 }
 
+                                Image {
+                                    visible: treeDelegate.model.itemType === 5
+                                    source: "qrc:/images/folder.png"
+                                    sourceSize.width: 14
+                                    sourceSize.height: 14
+                                    fillMode: Image.PreserveAspectFit
+                                    Layout.preferredWidth: 14
+                                    Layout.preferredHeight: 14
+                                }
+
                                 Text {
-                                    visible: treeIconText(treeDelegate.model.itemType) !== ""
+                                    visible: treeDelegate.model.itemType !== 5 && treeIconText(treeDelegate.model.itemType) !== ""
                                     text: treeIconText(treeDelegate.model.itemType)
                                     color: treeDelegate.model.itemType === 2 ? root.mutedColor : root.accentColor
                                     font.family: fontIconLoader.fa_solid
@@ -628,6 +728,14 @@ ApplicationWindow {
                                         }
 
                                         Text {
+                                            visible: noteDelegate.model.noteIsPinned
+                                            text: fontIconLoader.icons.fa_thumbtack
+                                            color: root.accentColor
+                                            font.family: fontIconLoader.fa_solid
+                                            font.pointSize: 9
+                                        }
+
+                                        Text {
                                             text: noteDelegate.model.noteLastModificationDateTime ? noteDelegate.model.noteLastModificationDateTime.toLocaleString(Qt.locale(), Locale.ShortFormat) : ""
                                             color: root.mutedColor
                                             font.family: Notes.AppBackend.displayFontFamily
@@ -658,8 +766,18 @@ ApplicationWindow {
                                 }
                             }
 
-                            TapHandler {
-                                onTapped: Notes.AppBackend.selectNoteRow(noteDelegate.index)
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                preventStealing: false
+
+                                onClicked: function(mouse) {
+                                    Notes.AppBackend.selectNoteRow(noteDelegate.index)
+
+                                    if (mouse.button === Qt.RightButton) {
+                                        root.openNoteContextMenu(noteDelegate, mouse.x, mouse.y)
+                                    }
+                                }
                             }
                         }
                 }
@@ -711,8 +829,7 @@ ApplicationWindow {
                                 }
 
                                 IconButton {
-                                    icon: fontIconLoader.icons.mt_article
-                                    iconFontFamily: fontIconLoader.mt_symbols
+                                    icon: fontIconLoader.icons.fa_file_lines
                                     themeData: root.themeData
                                     themeColor: Notes.AppBackend.kanbanVisible ? root.mutedColor : root.accentColor
                                     platform: Notes.AppBackend.platformName
@@ -720,8 +837,7 @@ ApplicationWindow {
                                 }
 
                                 IconButton {
-                                    icon: fontIconLoader.icons.mt_view_kanban
-                                    iconFontFamily: fontIconLoader.mt_symbols
+                                    icon: fontIconLoader.icons.fa_table_columns
                                     themeData: root.themeData
                                     themeColor: Notes.AppBackend.kanbanVisible ? root.accentColor : root.mutedColor
                                     platform: Notes.AppBackend.platformName
@@ -848,9 +964,12 @@ ApplicationWindow {
                                 padding: 0
                                 font.family: Notes.AppBackend.editorFontFamily
                                 font.pointSize: Notes.AppBackend.editorFontPointSize
+                                textFormat: TextEdit.PlainText
                                 background: Rectangle {
                                         color: "transparent"
                                     }
+
+                                    Component.onCompleted: Notes.AppBackend.noteEditor.attachTextDocument(textDocument)
 
                                     onTextChanged: {
                                         if (!root.editorSyncing) {

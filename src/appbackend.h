@@ -43,6 +43,10 @@ class AppBackend : public QObject {
     Q_PROPERTY(bool kanbanVisible READ kanbanVisible NOTIFY kanbanVisibleChanged)
     Q_PROPERTY(bool alwaysOnTop READ alwaysOnTop NOTIFY alwaysOnTopChanged)
     Q_PROPERTY(bool canCreateNotes READ canCreateNotes NOTIFY canCreateNotesChanged)
+    Q_PROPERTY(bool currentContextIsTrash READ currentContextIsTrash NOTIFY contextStateChanged)
+    Q_PROPERTY(bool currentContextIsTag READ currentContextIsTag NOTIFY contextStateChanged)
+    Q_PROPERTY(bool currentContextAllowsPinning READ currentContextAllowsPinning NOTIFY contextStateChanged)
+    Q_PROPERTY(bool currentNotePinned READ currentNotePinned NOTIFY currentNotePinnedChanged)
     Q_PROPERTY(int initialWindowWidth READ initialWindowWidth CONSTANT)
     Q_PROPERTY(int initialWindowHeight READ initialWindowHeight CONSTANT)
     Q_PROPERTY(int initialWindowX READ initialWindowX CONSTANT)
@@ -75,12 +79,18 @@ public:
     [[nodiscard]] int initialWindowHeight() const;
     [[nodiscard]] int initialWindowX() const;
     [[nodiscard]] int initialWindowY() const;
+    [[nodiscard]] bool currentContextIsTrash() const;
+    [[nodiscard]] bool currentContextIsTag() const;
+    [[nodiscard]] bool currentContextAllowsPinning() const;
+    [[nodiscard]] bool currentNotePinned() const;
 
     Q_INVOKABLE void publishState();
     Q_INVOKABLE void activateTreeItem(int itemType, int nodeId);
     Q_INVOKABLE void selectNoteRow(int row);
     Q_INVOKABLE void createNewNote();
     Q_INVOKABLE void moveCurrentNoteToTrash();
+    Q_INVOKABLE void restoreCurrentNote();
+    Q_INVOKABLE void setCurrentNotePinned(bool isPinned);
     Q_INVOKABLE void changeEditorFontTypeFromStyleButtons(FontTypeface::Value fontTypeface, int chosenFontIndex);
     Q_INVOKABLE void changeEditorFontSizeFromStyleButtons(FontSizeAction::Value fontSizeAction);
     Q_INVOKABLE void changeEditorTextWidthFromStyleButtons(EditorTextWidth::Value editorTextWidth);
@@ -120,6 +130,8 @@ signals:
     void kanbanVisibleChanged();
     void alwaysOnTopChanged();
     void canCreateNotesChanged();
+    void contextStateChanged();
+    void currentNotePinnedChanged();
 
     void themeChanged(QVariant theme);
     void platformSet(QVariant platform);

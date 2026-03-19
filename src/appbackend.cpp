@@ -1,6 +1,7 @@
 #include "appbackend.h"
 
 #include <QCoreApplication>
+#include <QColor>
 #include <QDir>
 #include <QFile>
 #include <QFont>
@@ -43,6 +44,18 @@ QString currentPlatformName() {
 #else
     return QStringLiteral("Unix");
 #endif
+}
+
+QColor editorTextColorForTheme(Theme::Value theme) {
+    switch (theme) {
+        case Theme::Dark:
+            return QColor(QStringLiteral("#ececec"));
+        case Theme::Sepia:
+            return QColor(QStringLiteral("#4b3a24"));
+        case Theme::Light:
+        default:
+            return QColor(QStringLiteral("#2f2c26"));
+    }
 }
 }  // namespace
 
@@ -217,6 +230,31 @@ int AppBackend::initialWindowY() const {
     return m_initialWindowY;
 }
 
+bool AppBackend::currentContextIsTrash() const {
+    return !m_listViewInfo.isInTag && m_listViewInfo.parentFolderId == TRASH_FOLDER_ID;
+}
+
+bool AppBackend::currentContextIsTag() const {
+    return m_listViewInfo.isInTag;
+}
+
+bool AppBackend::currentContextAllowsPinning() const {
+    return !m_listViewInfo.isInTag && m_listViewInfo.parentFolderId != TRASH_FOLDER_ID;
+}
+
+bool AppBackend::currentNotePinned() const {
+    if (m_noteModel == nullptr || m_noteEditor == nullptr) {
+        return false;
+    }
+
+    const QModelIndex noteIndex = m_noteModel->getNoteIndex(m_noteEditor->currentEditingNoteId());
+    if (!noteIndex.isValid()) {
+        return false;
+    }
+
+    return noteIndex.data(NoteListModel::NoteIsPinned).toBool();
+}
+
 void AppBackend::publishState() {
     emitDisplayFontState();
     emitFontState();
@@ -302,6 +340,63 @@ void AppBackend::createNewNote() {
 
 void AppBackend::moveCurrentNoteToTrash() {
     m_noteEditor->deleteCurrentNote();
+}
+
+void AppBackend::restoreCurrentNote() {
+    if (m_noteModel == nullptr || m_noteEditor == nullptr) {
+        return;
+    }
+
+    const int noteId = m_noteEditor->currentEditingNoteId();
+    if (noteId == INVALID_NODE_ID) {
+        return;
+    }
+
+    NodeData note;
+    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, note),
+                              Q_ARG(int, noteId));
+    if (note.id() == INVALID_NODE_ID || note.parentId() != TRASH_FOLDER_ID) {
+        return;
+    }
+
+    const QModelIndex noteIndex = m_noteModel->getNoteIndex(note.id());
+    const int removedRow = noteIndex.isValid() ? noteIndex.row() : -1;
+    if (noteIndex.isValid()) {
+        m_noteModel->removeNotes({noteIndex});
+    }
+
+    NodeData defaultNotesFolder;
+    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, defaultNotesFolder),
+                              Q_ARG(int, DEFAULT_NOTES_FOLDER_ID));
+    QMetaObject::invokeMethod(m_dbManager, "moveNode", Qt::QueuedConnection, Q_ARG(int, note.id()),
+                              Q_ARG(NodeData, defaultNotesFolder));
+
+    if (m_noteModel->rowCount() == 0) {
+        m_selectedNoteId = INVALID_NODE_ID;
+        saveSelectedNote(INVALID_NODE_ID);
+        m_noteEditor->closeEditor();
+        emit currentNotePinnedChanged();
+        return;
+    }
+
+    if (removedRow >= 0) {
+        const int nextRow = std::min(removedRow, m_noteModel->rowCount() - 1);
+        selectNoteIndex(m_noteModel->index(nextRow, 0));
+    }
+}
+
+void AppBackend::setCurrentNotePinned(bool isPinned) {
+    if (m_noteModel == nullptr || m_noteEditor == nullptr) {
+        return;
+    }
+
+    const QModelIndex noteIndex = m_noteModel->getNoteIndex(m_noteEditor->currentEditingNoteId());
+    if (!noteIndex.isValid()) {
+        return;
+    }
+
+    m_noteModel->setNotesIsPinned({noteIndex}, isPinned);
+    emit currentNotePinnedChanged();
 }
 
 void AppBackend::changeEditorFontTypeFromStyleButtons(FontTypeface::Value fontTypeface, int chosenFontIndex) {
@@ -424,6 +519,7 @@ void AppBackend::setTheme(Theme::Value theme) {
         return;
     }
     m_currentTheme = theme;
+    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme), m_editorMediumFontSize);
     saveEditorSettings();
     emitThemeState();
     emitSettingsState();
@@ -648,6 +744,7 @@ void AppBackend::loadNoteListModel(const QVector<NodeData>& noteList, const List
     m_noteModel->setListNote(noteList, m_listViewInfo);
     updateListViewLabel();
     emit canCreateNotesChanged();
+    emit contextStateChanged();
 
     if (m_listViewInfo.needCreateNewNote) {
         m_listViewInfo.needCreateNewNote = false;
@@ -671,6 +768,7 @@ void AppBackend::loadNoteListModel(const QVector<NodeData>& noteList, const List
     }
 
     selectNoteIndex(targetIndex);
+    emit currentNotePinnedChanged();
 }
 
 void AppBackend::onChildNotesCountChangedTag(int tagId, int notesCount) {
@@ -721,6 +819,7 @@ void AppBackend::onNoteEditClosed(const NodeData& note, bool selectNext) {
     if (m_noteModel->rowCount() == 0) {
         m_selectedNoteId = INVALID_NODE_ID;
         saveSelectedNote(INVALID_NODE_ID);
+        emit currentNotePinnedChanged();
         return;
     }
 
@@ -743,6 +842,7 @@ void AppBackend::onDeleteNoteRequested(const NodeData& note) {
         m_selectedNoteId = INVALID_NODE_ID;
         saveSelectedNote(INVALID_NODE_ID);
         m_noteEditor->closeEditor();
+        emit currentNotePinnedChanged();
         return;
     }
 
@@ -1116,6 +1216,7 @@ void AppBackend::selectNoteIndex(const QModelIndex& index, bool saveSelection) {
             saveSelectedNote(INVALID_NODE_ID);
         }
         m_noteEditor->closeEditor();
+        emit currentNotePinnedChanged();
         return;
     }
 
@@ -1132,6 +1233,7 @@ void AppBackend::selectNoteIndex(const QModelIndex& index, bool saveSelection) {
     }
     m_noteEditor->setForcedReadOnly((!m_listViewInfo.isInTag) && m_listViewInfo.parentFolderId == TRASH_FOLDER_ID);
     m_noteEditor->showNotesInEditor({note});
+    emit currentNotePinnedChanged();
 }
 
 void AppBackend::updateListViewLabel() {
@@ -1179,6 +1281,7 @@ void AppBackend::updateCurrentFont() {
     QFont font(m_currentEditorFontFamily, m_editorMediumFontSize);
     const QFontMetrics metrics(font);
     m_textColumnWidth = std::max(360, metrics.horizontalAdvance(QLatin1Char('n')) * currentCharsLimit());
+    m_noteEditor->updateHighlightingTheme(m_currentTheme, editorTextColorForTheme(m_currentTheme), m_editorMediumFontSize);
     emit editorFontChanged();
     emit editorLayoutChanged();
 }

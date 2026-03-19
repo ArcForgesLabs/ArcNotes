@@ -174,9 +174,14 @@ set(SOURCES
     ${QRC_GENERATED_SOURCES})
 
 set(SOURCES_3RD_PARTY)
+list(APPEND SOURCES_3RD_PARTY
+     ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/markdownhighlighter.cpp
+     ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qownlanguagedata.cpp)
 set(QML_CXX_SOURCES
     ${PROJECT_SOURCE_DIR}/src/appbackend.cpp
     ${PROJECT_SOURCE_DIR}/src/appbackend.h
+    ${PROJECT_SOURCE_DIR}/src/custommarkdownhighlighter.cpp
+    ${PROJECT_SOURCE_DIR}/src/custommarkdownhighlighter.h
     ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.cpp
     ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.h
     ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.cpp
@@ -198,7 +203,8 @@ endif()
 add_executable(${APP_TARGET} WIN32 MACOSX_BUNDLE ${SOURCES}
                                                  ${SOURCES_3RD_PARTY})
 
-target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src
+                                               ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit)
 
 target_compile_definitions(
   ${APP_TARGET}
