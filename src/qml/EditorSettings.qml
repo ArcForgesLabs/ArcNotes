@@ -9,10 +9,12 @@ import nuttyartist.notes 1.0 as Notes
 
 Item {
     id: settingsContainer
-    property int extraWidthForQWidgets: platform === "Apple" ? 60 : 0
-    property int extraHeightForQWidgets: platform === "Apple" ? 40 : 0
-    width: settingsPane.width + extraWidthForQWidgets
-    height: settingsPane.height + extraHeightForQWidgets
+    readonly property var mainWindow: Notes.AppBackend
+    readonly property var noteEditorLogic: Notes.AppBackend.noteEditor
+    property int extraWidthPadding: platform === "Apple" ? 60 : 0
+    property int extraHeightPadding: platform === "Apple" ? 40 : 0
+    width: settingsPane.width + extraWidthPadding
+    height: settingsPane.height + extraHeightPadding
     property var themeData: {{theme: "Light"}}
     property string displayFontFamily: "Roboto"
     property string platform: ""
@@ -181,8 +183,8 @@ Item {
         Material.elevation: 10
         Material.background: settingsContainer.mainBackgroundColor
 //        Material.roundedScale: Material.MediumScale
-        x: settingsContainer.extraWidthForQWidgets === 0 ? 0 : 20
-        y: settingsContainer.extraHeightForQWidgets === 0 ? 0 : 20
+        x: settingsContainer.extraWidthPadding === 0 ? 0 : 20
+        y: settingsContainer.extraHeightPadding === 0 ? 0 : 20
 
         Rectangle {
             visible: settingsContainer.qtVersion < 6
@@ -930,7 +932,7 @@ Item {
         Material.theme: settingsContainer.themeData.theme === "Dark" ? Material.Dark : Material.Light
 //        Material.roundedScale: Material.SmallScale
         width: settingsPane.contentWidth
-        x: settingsContainer.extraWidthForQWidgets === 0 ? 0 : 25
+        x: settingsContainer.extraWidthPadding === 0 ? 0 : 25
         y: settingsPane.height - height/2 - 100
         font.family: settingsContainer.displayFontFamily
 

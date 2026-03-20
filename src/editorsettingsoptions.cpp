@@ -1,9 +1,5 @@
 #include "editorsettingsoptions.h"
 
-#include <qdebug.h>
-
-#include <QStyle>
-#include <QVariant>
 #include <sstream>
 
 EditorSettingsOptions::EditorSettingsOptions(QObject* parent) : QObject(parent) {}
@@ -48,19 +44,4 @@ std::string to_string(Theme::Value theme) {
     std::ostringstream oss;
     oss << theme;
     return oss.str();
-}
-
-void setCSSThemeAndUpdate(QWidget* obj, Theme::Value theme) {
-    setCSSClassesAndUpdate(obj, QString::fromStdString(to_string(theme)).toLower().toStdString());
-}
-
-void setCSSClassesAndUpdate(QWidget* obj, const std::string& classNames) {
-    if (obj->styleSheet().isEmpty()) {
-        qWarning() << "setCSSClassesAndUpdate: styleSheet is empty for widget with name " << obj->objectName();
-    }
-    // set the class
-    obj->setProperty("class", classNames.c_str());
-    // update the widget
-    obj->style()->polish(obj);
-    obj->update();
 }

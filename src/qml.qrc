@@ -9,8 +9,10 @@
         <file>qml/FontIconLoader.qml</file>
         <file>qml/FontIconsCodes.qml</file>
         <file>qml/IconButton.qml</file>
+        <file>qml/KanbanBoard.qml</file>
         <file>qml/kanbanMain.qml</file>
         <file>qml/OptionItemButton.qml</file>
+        <file>qml/SubscriptionStatus.qml</file>
         <file>qml/SwitchButton.qml</file>
         <file>qml/TextButton.qml</file>
         <file>qml/ThemeChooserButton.qml</file>

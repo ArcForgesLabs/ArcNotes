@@ -63,6 +63,14 @@ QVariant TagListModel::data(const QModelIndex& index, int role) const {
     return {};
 }
 
+QHash<int, QByteArray> TagListModel::roleNames() const {
+    auto roles = QAbstractListModel::roleNames();
+    roles[static_cast<int>(TagListRole::IdRole)] = "tagId";
+    roles[static_cast<int>(TagListRole::NameRole)] = "tagName";
+    roles[static_cast<int>(TagListRole::ColorRole)] = "tagColor";
+    return roles;
+}
+
 void TagListModel::updateTagData() {
     m_data.clear();
     for (const auto& id : std::as_const(m_ids)) {

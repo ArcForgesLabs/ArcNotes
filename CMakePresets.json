@@ -44,7 +44,8 @@
       "inherits": ["windows-base"],
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "QML_RUNTIME_LOAD": "ON"
       }
     },
     {
@@ -125,7 +126,8 @@
       "inherits": ["linux-base"],
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "QML_RUNTIME_LOAD": "ON"
       }
     },
     {

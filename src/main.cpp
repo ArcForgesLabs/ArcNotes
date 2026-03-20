@@ -4,17 +4,20 @@
  * And for those linux users that believe in the power of notes
  *********************************************************************************************/
 
-#include <QApplication>
 #include <QDir>
 #include <QFile>
 #include <QFontDatabase>
+#include <QGuiApplication>
 #include <QMessageLogContext>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QQmlApplicationEngine>
+#include <QQuickStyle>
 #include <QStandardPaths>
 #include <QTextStream>
+#include <QWindow>
 
-#include "mainwindow.h"
+#include "appbackend.h"
 #include "singleinstance.h"
 
 namespace {
@@ -43,16 +46,17 @@ void notes_message_handler(QtMsgType type, const QMessageLogContext& context, co
 }  // namespace
 
 int main(int argc, char* argv[]) {
-    QApplication app(argc, argv);
+    QQuickStyle::setStyle(QStringLiteral("Material"));
+    QGuiApplication app(argc, argv);
     qSetMessagePattern(QStringLiteral("[%{time yyyy-MM-dd hh:mm:ss.zzz}] [%{type}] [%{category}] %{message}"));
     qInstallMessageHandler(notes_message_handler);
 
     // Set application information
-    QApplication::setApplicationName("Notes");
-    QApplication::setApplicationVersion(APP_VERSION);
+    QGuiApplication::setApplicationName("Notes");
+    QGuiApplication::setApplicationVersion(APP_VERSION);
 
 #if defined(Q_OS_UNIX) && !defined(Q_OS_MACOS)
-    QApplication::setDesktopFileName(APP_ID);
+    QGuiApplication::setDesktopFileName(APP_ID);
 #endif
 
     if (QFontDatabase::addApplicationFont(":/fonts/fontawesome/fa-solid-900.ttf") < 0)
@@ -127,12 +131,27 @@ int main(int argc, char* argv[]) {
 
     instance.listen(name);
 
-    // Create and Show the app
-    MainWindow w;
-    w.show();
+    QQmlApplicationEngine engine;
+#ifdef QML_RUNTIME_LOAD
+    // Dev mode: load QML from resource without AOT compilation
+    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/nuttyartist/notes/src/qml/Main.qml")));
+#else
+    // Release mode: load from pre-compiled QML module
+    engine.loadFromModule("nuttyartist.notes", "Main");
+#endif
+    if (engine.rootObjects().isEmpty()) {
+        return EXIT_FAILURE;
+    }
 
-    // Bring the Notes window to the front
-    QObject::connect(&instance, &SingleInstance::newInstance, &w, [&]() { (&w)->setMainWindowVisibility(true); });
+    auto* rootWindow = qobject_cast<QWindow*>(engine.rootObjects().constFirst());
+    QObject::connect(&instance, &SingleInstance::newInstance, &app, [rootWindow]() {
+        if (rootWindow == nullptr) {
+            return;
+        }
+        rootWindow->show();
+        rootWindow->raise();
+        rootWindow->requestActivate();
+    });
 
-    return QApplication::exec();
+    return QGuiApplication::exec();
 }

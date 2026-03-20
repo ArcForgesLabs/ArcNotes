@@ -21,6 +21,8 @@ option(UPDATE_CHECKER
 option(PRO_VERSION "Enable or disable Notes Pro features" ON)
 option(ENABLE_ASAN "Enable address sanitizer" OFF)
 option(USE_WERROR "Error on compile warning" OFF)
+option(QML_RUNTIME_LOAD
+       "Skip QML AOT compilation, load QML at runtime (dev mode)" OFF)
 
 project(
   Notes
@@ -28,15 +30,12 @@ project(
   DESCRIPTION "Note-taking app. Write down your thoughts"
   LANGUAGES CXX)
 
-include(CTest)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Embed MSVC/UCRT/SDK system include paths into compile_commands.json so that
@@ -81,11 +80,10 @@ set(QT_COMPONENTS
     Concurrent
     Gui
     Network
+    Qml
     Sql
-    Test
-    Widgets
     Quick
-    QuickWidgets)
+    QuickControls2)
 
 message(STATUS "Trying to find Qt 6...")
 if(NOT DEFINED Qt6_DIR AND DEFINED ENV{Qt6_DIR})
@@ -107,14 +105,6 @@ find_package(Qt6 REQUIRED COMPONENTS ${QT_COMPONENTS})
 
 set(QT_VERSION_MAJOR 6)
 set(QT_VERSION ${Qt6_VERSION})
-
-if(QT_VERSION VERSION_GREATER_EQUAL 6.10)
-  list(APPEND QT_COMPONENTS CorePrivate GuiPrivate WidgetsPrivate)
-endif()
-
-if(QT_VERSION VERSION_GREATER_EQUAL 6.10)
-  find_package(Qt6 REQUIRED COMPONENTS CorePrivate GuiPrivate WidgetsPrivate)
-endif()
 
 message(STATUS "Success! Configuration details:")
 message(STATUS "App name: ${PROJECT_NAME}")
@@ -155,170 +145,59 @@ if(GIT_REVISION)
   endif()
 endif()
 
-set(QRC_SOURCES ${PROJECT_SOURCE_DIR}/src/fonts.qrc
-                ${PROJECT_SOURCE_DIR}/src/images.qrc
-                ${PROJECT_SOURCE_DIR}/src/styles.qrc)
+# ── Gather source files by extension ─────────────────────────────────
+file(GLOB_RECURSE SRC_HEADERS CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE SRC_SOURCES CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SRC_QRC CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.qrc")
 
-qt_add_resources(QRC_GENERATED_SOURCES ${QRC_SOURCES})
+qt_add_resources(QRC_GENERATED_SOURCES ${SRC_QRC})
 
-set(SOURCES
-    ${PROJECT_SOURCE_DIR}/src/aboutwindow.cpp
-    ${PROJECT_SOURCE_DIR}/src/aboutwindow.h
-    ${PROJECT_SOURCE_DIR}/src/allnotebuttontreedelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/allnotebuttontreedelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/customapplicationstyle.cpp
-    ${PROJECT_SOURCE_DIR}/src/customapplicationstyle.h
-    ${PROJECT_SOURCE_DIR}/src/customdocument.cpp
-    ${PROJECT_SOURCE_DIR}/src/customDocument.h
-    ${PROJECT_SOURCE_DIR}/src/customMarkdownHighlighter.cpp
-    ${PROJECT_SOURCE_DIR}/src/customMarkdownHighlighter.h
-    ${PROJECT_SOURCE_DIR}/src/dbmanager.cpp
-    ${PROJECT_SOURCE_DIR}/src/dbmanager.h
-    ${PROJECT_SOURCE_DIR}/src/defaultnotefolderdelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/defaultnotefolderdelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.h
-    ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.cpp
-    ${PROJECT_SOURCE_DIR}/src/elidedlabel.cpp
-    ${PROJECT_SOURCE_DIR}/src/elidedlabel.h
-    ${PROJECT_SOURCE_DIR}/src/foldertreedelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/foldertreedelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/fontloader.h
-    ${PROJECT_SOURCE_DIR}/src/labeledittype.cpp
-    ${PROJECT_SOURCE_DIR}/src/labeledittype.h
-    ${PROJECT_SOURCE_DIR}/src/listviewlogic.cpp
-    ${PROJECT_SOURCE_DIR}/src/listviewlogic.h
-    ${PROJECT_SOURCE_DIR}/src/lqtutils_enum.h
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
-    ${PROJECT_SOURCE_DIR}/src/mainwindow.cpp
-    ${PROJECT_SOURCE_DIR}/src/mainwindow.h
-    ${PROJECT_SOURCE_DIR}/src/nodedata.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodedata.h
-    ${PROJECT_SOURCE_DIR}/src/nodepath.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodepath.h
-    ${PROJECT_SOURCE_DIR}/src/nodetreedelegate.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodetreedelegate.h
-    ${PROJECT_SOURCE_DIR}/src/nodetreemodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodetreemodel.h
-    ${PROJECT_SOURCE_DIR}/src/nodetreeview.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodetreeview.h
-    ${PROJECT_SOURCE_DIR}/src/nodetreeview_p.h
-    ${PROJECT_SOURCE_DIR}/src/noteeditorlogic.cpp
-    ${PROJECT_SOURCE_DIR}/src/noteeditorlogic.h
-    ${PROJECT_SOURCE_DIR}/src/notelistdelegate.cpp
-    ${PROJECT_SOURCE_DIR}/src/notelistdelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/notelistdelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/notelistdelegate.h
-    ${PROJECT_SOURCE_DIR}/src/notelistmodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/notelistmodel.h
-    ${PROJECT_SOURCE_DIR}/src/notelistview.cpp
-    ${PROJECT_SOURCE_DIR}/src/notelistview.h
-    ${PROJECT_SOURCE_DIR}/src/notelistview_p.h
-    ${PROJECT_SOURCE_DIR}/src/pushbuttontype.cpp
-    ${PROJECT_SOURCE_DIR}/src/pushbuttontype.h
-    ${PROJECT_SOURCE_DIR}/src/singleinstance.cpp
-    ${PROJECT_SOURCE_DIR}/src/singleinstance.h
-    ${PROJECT_SOURCE_DIR}/src/splitterstyle.cpp
-    ${PROJECT_SOURCE_DIR}/src/splitterstyle.h
-    ${PROJECT_SOURCE_DIR}/src/tagdata.cpp
-    ${PROJECT_SOURCE_DIR}/src/tagdata.h
-    ${PROJECT_SOURCE_DIR}/src/taglistdelegate.cpp
-    ${PROJECT_SOURCE_DIR}/src/taglistdelegate.h
-    ${PROJECT_SOURCE_DIR}/src/taglistmodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/taglistmodel.h
-    ${PROJECT_SOURCE_DIR}/src/taglistview.cpp
-    ${PROJECT_SOURCE_DIR}/src/taglistview.h
-    ${PROJECT_SOURCE_DIR}/src/tagpool.cpp
-    ${PROJECT_SOURCE_DIR}/src/tagpool.h
-    ${PROJECT_SOURCE_DIR}/src/tagtreedelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/tagtreedelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/trashbuttondelegateeditor.cpp
-    ${PROJECT_SOURCE_DIR}/src/trashbuttondelegateeditor.h
-    ${PROJECT_SOURCE_DIR}/src/treeviewlogic.cpp
-    ${PROJECT_SOURCE_DIR}/src/treeviewlogic.h
-    ${PROJECT_SOURCE_DIR}/src/utils.h
-    # ui
-    ${PROJECT_SOURCE_DIR}/src/aboutwindow.ui
-    ${PROJECT_SOURCE_DIR}/src/mainwindow.ui
-    ${QRC_GENERATED_SOURCES})
-
-# Third-party source files.
+# Files that were originally in 3rdParty — suppress warnings on them.
 set(SOURCES_3RD_PARTY
-    ${PROJECT_SOURCE_DIR}/3rdParty/qautostart/src/qautostart.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qautostart/src/qautostart.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/linenumberarea.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/markdownhighlighter.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/markdownhighlighter.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qmarkdowntextedit.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qmarkdowntextedit.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qownlanguagedata.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qownlanguagedata.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qplaintexteditsearchwidget.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qplaintexteditsearchwidget.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobal.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobal.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut_p.h)
+    ${PROJECT_SOURCE_DIR}/src/markdownhighlighter.cpp
+    ${PROJECT_SOURCE_DIR}/src/qownlanguagedata.cpp)
 
+# C++ sources that feed into qt_add_qml_module.
+set(QML_CXX_SOURCES)
+foreach(_f ${SRC_SOURCES} ${SRC_HEADERS})
+  get_filename_component(_name ${_f} NAME)
+  if(_name MATCHES "^(appbackend|custommarkdownhighlighter|editorsettingsoptions|noteeditorbackend|updatebackend)\\.(cpp|h)$")
+    list(APPEND QML_CXX_SOURCES ${_f})
+  endif()
+endforeach()
+
+# Everything else (excluding QML_CXX_SOURCES) goes into SOURCES.
+set(SOURCES ${SRC_SOURCES} ${SRC_HEADERS} ${QRC_GENERATED_SOURCES})
+list(REMOVE_ITEM SOURCES ${QML_CXX_SOURCES})
+
+set(UPDATE_CHECKER_DEFINE 0)
 if(UPDATE_CHECKER)
-  list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/updaterwindow.cpp
-       ${PROJECT_SOURCE_DIR}/src/updaterwindow.h
-       ${PROJECT_SOURCE_DIR}/src/updaterwindow.ui)
-
-  list(
-    APPEND
-    SOURCES_3RD_PARTY
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/include/QSimpleUpdater.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/src/Downloader.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/src/Downloader.h
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/src/QSimpleUpdater.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/src/Updater.cpp
-    ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/src/Updater.h)
+  set(UPDATE_CHECKER_DEFINE 1)
 endif()
 
 if(APPLE)
-  list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/framelesswindow.mm
-       ${PROJECT_SOURCE_DIR}/src/framelesswindow.h
-       ${PROJECT_SOURCE_DIR}/src/images/notes_icon.icns)
-
-  list(APPEND SOURCES_3RD_PARTY
-       ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut_mac.cpp)
-elseif(UNIX)
-  list(APPEND SOURCES_3RD_PARTY
-       ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut_x11.cpp)
+  list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/images/notes_icon.icns)
 elseif(WIN32)
-  list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/framelesswindow.cpp
-       ${PROJECT_SOURCE_DIR}/src/framelesswindow.h
-       ${PROJECT_SOURCE_DIR}/src/images/notes.rc)
-
-  list(APPEND SOURCES_3RD_PARTY
-       ${PROJECT_SOURCE_DIR}/3rdParty/qxt/qxtglobalshortcut_win.cpp)
+  list(APPEND SOURCES ${PROJECT_SOURCE_DIR}/src/images/notes.rc)
 endif()
 
 add_executable(${APP_TARGET} WIN32 MACOSX_BUNDLE ${SOURCES}
-                                                 ${SOURCES_3RD_PARTY})
+                                                 ${QML_CXX_SOURCES})
 
 target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
-
-# Include third-party headers as 'system' files, in order to silence compiler warnings on them.
-target_include_directories(
-  ${APP_TARGET} SYSTEM
-  PUBLIC ${PROJECT_SOURCE_DIR}/3rdParty/qautostart/src
-         ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit
-         ${PROJECT_SOURCE_DIR}/3rdParty/qxt)
-
-if(UPDATE_CHECKER)
-  target_include_directories(
-    ${APP_TARGET} SYSTEM
-    PUBLIC ${PROJECT_SOURCE_DIR}/3rdParty/QSimpleUpdater/include)
-
-  add_definitions(-DUPDATE_CHECKER)
-endif()
 
 target_compile_definitions(
   ${APP_TARGET}
   PUBLIC APP_VERSION="${PROJECT_VERSION}${GIT_REV}" APP_ID="${APP_ID}"
-         QT_DISABLE_DEPRECATED_BEFORE=0x050900 QSU_INCLUDE_MOC=1)
+         QT_DISABLE_DEPRECATED_BEFORE=0x050900
+         UPDATE_CHECKER=${UPDATE_CHECKER_DEFINE})
+
+if(QML_RUNTIME_LOAD)
+  target_compile_definitions(${APP_TARGET} PUBLIC QML_RUNTIME_LOAD)
+endif()
 
 # Enable useful compiler warnings (except on third-party code).
 if(MSVC)
@@ -360,36 +239,23 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
 endif()
 
 if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
-  set(QML_FILES
-      src/qml/CheckBoxMaterial.qml
-      src/qml/CustomHorizontalScrollBar.qml
-      src/qml/CustomTextArea.qml
-      src/qml/CustomTextField.qml
-      src/qml/CustomVerticalScrollBar.qml
-      src/qml/EditorSettings.qml
-      src/qml/FontChooserButton.qml
-      src/qml/FontIconLoader.qml
-      src/qml/FontIconsCodes.qml
-      src/qml/IconButton.qml
-      src/qml/OptionItemButton.qml
-      src/qml/SubscriptionWindow.qml
-      src/qml/SwitchButton.qml
-      src/qml/TextButton.qml
-      src/qml/ThemeChooserButton.qml
-      src/qml/TodoColumnDelegate.qml
-      src/qml/TodoTaskDelegate.qml
-      src/qml/Utilities.js
-      src/qml/ViewChooserButton.qml
-      src/qml/kanbanMain.qml)
+  # Dev mode: disable qmlcachegen to skip QML→C++ AOT compilation
+  if(QML_RUNTIME_LOAD)
+    set(QT_QML_NO_CACHEGEN TRUE)
+    message(STATUS "QML_RUNTIME_LOAD is ON: qmlcachegen disabled, QML will be loaded at runtime")
+  endif()
+
+  file(GLOB_RECURSE QML_FILES RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS
+       "${PROJECT_SOURCE_DIR}/src/qml/*.qml"
+       "${PROJECT_SOURCE_DIR}/src/qml/*.js")
+
+  set_source_files_properties(src/qml/SubscriptionStatus.qml
+                              PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
   foreach(file IN LISTS QML_FILES)
     get_filename_component(fileName ${file} NAME)
-    set_source_files_properties(${file} PROPERTIES QT_RESOURCE_ALIAS
-                                                   ${fileName})
 
-    # This whole shenanigans is required to silence compiler warnings on files auto-generated by rcc.
-    # It isn't pretty, but unfortunately there's no nicer way to do this yet:
-    # https://discourse.cmake.org/t/qt-autogen-source-files-custom-compilation-flags/3002
+    # Silence compiler warnings on files auto-generated by rcc.
     string(REPLACE "." "_" file_qml_cpp ${fileName})
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
@@ -406,8 +272,6 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
   endforeach()
 
   # Silence an extra warning given by Clang:
-  # build/.rcc/qmlcache/Notes_qmlcache_loader.cpp#L46
-  # must specify at least one argument for '...' parameter of variadic macro [-Wgnu-zero-variadic-macro-arguments]
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set_source_files_properties(
       ${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${APP_TARGET}_qmlcache_loader.cpp
@@ -423,24 +287,22 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
     NO_PLUGIN
     RESOURCE_PREFIX
     "/qt/qml"
+    SOURCES
+    ${QML_CXX_SOURCES}
     QML_FILES
-    ${QML_FILES}
-    NO_RESOURCE_TARGET_PATH)
+    ${QML_FILES})
 endif()
 
 target_link_libraries(
   ${APP_TARGET}
   PUBLIC Qt${QT_VERSION_MAJOR}::Concurrent
          Qt${QT_VERSION_MAJOR}::Core
-         Qt${QT_VERSION_MAJOR}::CorePrivate
          Qt${QT_VERSION_MAJOR}::Gui
-         Qt${QT_VERSION_MAJOR}::GuiPrivate
          Qt${QT_VERSION_MAJOR}::Network
+         Qt${QT_VERSION_MAJOR}::Qml
          Qt${QT_VERSION_MAJOR}::Sql
-         Qt${QT_VERSION_MAJOR}::Widgets
-         Qt${QT_VERSION_MAJOR}::WidgetsPrivate
          Qt${QT_VERSION_MAJOR}::Quick
-         Qt${QT_VERSION_MAJOR}::QuickWidgets)
+         Qt${QT_VERSION_MAJOR}::QuickControls2)
 
 if(APPLE)
   set(COPYRIGHT_TEXT
@@ -612,11 +474,21 @@ endif()
 add_custom_command(
   TARGET ${APP_TARGET}
   POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          $<TARGET_FILE_DIR:${APP_TARGET}>/nuttyartist/notes
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+          ${CMAKE_CURRENT_BINARY_DIR}/nuttyartist/notes
+          $<TARGET_FILE_DIR:${APP_TARGET}>/nuttyartist/notes
+  VERBATIM)
+
+add_custom_command(
+  TARGET ${APP_TARGET}
+  POST_BUILD
   COMMAND
     ${CMAKE_COMMAND}
     -DNOTES_QMLLS_DEST=${CMAKE_SOURCE_DIR}/.qmlls.ini
     -DNOTES_QMLLS_BUILD_DIR=${CMAKE_BINARY_DIR}
-    -DNOTES_QMLLS_IMPORT_PATHS=$<TARGET_FILE_DIR:${APP_TARGET}>;$<TARGET_FILE_DIR:${APP_TARGET}>/qml
+    -DNOTES_QMLLS_IMPORT_PATHS=${CMAKE_BINARY_DIR}\;$<TARGET_FILE_DIR:${APP_TARGET}>\;$<TARGET_FILE_DIR:${APP_TARGET}>/qml
     -DNOTES_QMLLS_DOC_DIR=${QT_INSTALL_DOCS}
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sync_qmlls_ini.cmake
   VERBATIM)
@@ -626,7 +498,3 @@ install(
   RUNTIME DESTINATION bin
   BUNDLE DESTINATION bin
   LIBRARY DESTINATION lib)
-
-if(BUILD_TESTING)
-  add_subdirectory(tests)
-endif()
