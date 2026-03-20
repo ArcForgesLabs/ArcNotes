@@ -132,7 +132,13 @@ int main(int argc, char* argv[]) {
     instance.listen(name);
 
     QQmlApplicationEngine engine;
+#ifdef QML_RUNTIME_LOAD
+    // Dev mode: load QML from resource without AOT compilation
+    engine.load(QUrl(QStringLiteral("qrc:/qt/qml/nuttyartist/notes/src/qml/Main.qml")));
+#else
+    // Release mode: load from pre-compiled QML module
     engine.loadFromModule("nuttyartist.notes", "Main");
+#endif
     if (engine.rootObjects().isEmpty()) {
         return EXIT_FAILURE;
     }

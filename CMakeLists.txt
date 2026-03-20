@@ -21,6 +21,8 @@ option(UPDATE_CHECKER
 option(PRO_VERSION "Enable or disable Notes Pro features" ON)
 option(ENABLE_ASAN "Enable address sanitizer" OFF)
 option(USE_WERROR "Error on compile warning" OFF)
+option(QML_RUNTIME_LOAD
+       "Skip QML AOT compilation, load QML at runtime (dev mode)" OFF)
 
 project(
   Notes
@@ -193,6 +195,10 @@ target_compile_definitions(
          QT_DISABLE_DEPRECATED_BEFORE=0x050900
          UPDATE_CHECKER=${UPDATE_CHECKER_DEFINE})
 
+if(QML_RUNTIME_LOAD)
+  target_compile_definitions(${APP_TARGET} PUBLIC QML_RUNTIME_LOAD)
+endif()
+
 # Enable useful compiler warnings (except on third-party code).
 if(MSVC)
   set(NOTES_COMPILE_OPTIONS
@@ -233,6 +239,12 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
 endif()
 
 if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
+  # Dev mode: disable qmlcachegen to skip QML→C++ AOT compilation
+  if(QML_RUNTIME_LOAD)
+    set(QT_QML_NO_CACHEGEN TRUE)
+    message(STATUS "QML_RUNTIME_LOAD is ON: qmlcachegen disabled, QML will be loaded at runtime")
+  endif()
+
   file(GLOB_RECURSE QML_FILES RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS
        "${PROJECT_SOURCE_DIR}/src/qml/*.qml"
        "${PROJECT_SOURCE_DIR}/src/qml/*.js")
