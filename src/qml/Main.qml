@@ -483,6 +483,89 @@ ApplicationWindow {
         }
     }
 
+    property int treeContextItemType: 0
+    property int treeContextNodeId: -1
+    property string treeContextDisplayText: ""
+
+    function openTreeContextMenu(anchorItem, X, Y, itemType, nodeId, displayText) {
+        treeContextItemType = itemType
+        treeContextNodeId = nodeId
+        treeContextDisplayText = displayText
+        treeContextMenu.x = Math.max(8, X)
+        treeContextMenu.y = Math.max(8, Y)
+        treeContextMenu.open()
+    }
+
+    Popup {
+        id: treeContextMenu
+        parent: Overlay.overlay
+        width: 196
+        padding: 0
+        modal: false
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            color: root.darkTheme ? "#232323" : "#ffffff"
+            border.color: root.darkTheme ? "#3f3f3f" : "#c7c7c7"
+            border.width: 1
+            radius: 4
+        }
+
+        contentItem: Column {
+            spacing: 0
+
+            ContextMenuItem {
+                text: qsTr("Rename")
+                onTriggered: {
+                    treeContextMenu.close()
+                    renameField.text = root.treeContextDisplayText
+                    renameDialog.open()
+                    renameField.selectAll()
+                    renameField.forceActiveFocus()
+                }
+            }
+
+            ContextMenuSeparator {}
+
+            ContextMenuItem {
+                text: root.treeContextItemType === 5 ? qsTr("Move To Trash") : qsTr("Delete Tag")
+                onTriggered: {
+                    treeContextMenu.close()
+                    if (root.treeContextItemType === 5) {
+                        Notes.AppBackend.deleteFolderFromTree(root.treeContextNodeId)
+                    } else if (root.treeContextItemType === 7) {
+                        Notes.AppBackend.deleteTagFromTree(root.treeContextNodeId)
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: renameDialog
+        modal: true
+        width: 360
+        title: root.treeContextItemType === 5 ? qsTr("Rename Folder") : qsTr("Rename Tag")
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onAccepted: {
+            Notes.AppBackend.renameTreeItem(root.treeContextItemType, root.treeContextNodeId, renameField.text)
+        }
+
+        contentItem: ColumnLayout {
+            spacing: 12
+            width: parent.width
+
+            TextField {
+                id: renameField
+                Layout.fillWidth: true
+                placeholderText: qsTr("Enter new name...")
+                font.family: Notes.AppBackend.displayFontFamily
+                onAccepted: renameDialog.accept()
+            }
+        }
+    }
+
     component ToolGlyphButton: Item {
         id: buttonRoot
         property string glyph: ""
@@ -797,6 +880,18 @@ ApplicationWindow {
                                     root.selectedTreeRow = treeDelegate.row
                                     Notes.AppBackend.activateTreeItem(treeDelegate.model.itemType ? treeDelegate.model.itemType : 0,
                                                                       treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1)
+                                }
+                            }
+
+                            TapHandler {
+                                acceptedButtons: Qt.RightButton
+                                enabled: treeDelegate.isFolderItem || treeDelegate.isTagItem
+                                onTapped: function(eventPoint) {
+                                    var pos = treeDelegate.mapToItem(root.contentItem, eventPoint.position.x, eventPoint.position.y)
+                                    root.openTreeContextMenu(treeDelegate, Math.round(pos.x), Math.round(pos.y),
+                                                             treeDelegate.model.itemType,
+                                                             treeDelegate.model.nodeId !== undefined ? treeDelegate.model.nodeId : -1,
+                                                             treeDelegate.model.displayText ? treeDelegate.model.displayText : "")
                                 }
                             }
 

@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QJsonArray>
 #include <QMetaObject>
+#include <QRandomGenerator>
 #include <QScreen>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
@@ -401,11 +402,18 @@ void AppBackend::addNewTag() {
         return;
     }
 
+    static const QStringList tagColorPalette = {
+        QStringLiteral("#448ac9"), QStringLiteral("#e74c3c"), QStringLiteral("#2ecc71"), QStringLiteral("#f39c12"),
+        QStringLiteral("#9b59b6"), QStringLiteral("#1abc9c"), QStringLiteral("#e67e22"), QStringLiteral("#3498db"),
+        QStringLiteral("#e91e63"), QStringLiteral("#00bcd4"),
+    };
+
     const QString tagName = m_treeModel->getNewTagPlaceholderName();
+    const QString& tagColor = tagColorPalette.at(QRandomGenerator::global()->bounded(tagColorPalette.size()));
 
     TagData newTag;
     newTag.setName(tagName);
-    newTag.setColor(QStringLiteral("#448ac9"));
+    newTag.setColor(tagColor);
 
     int newTagId = INVALID_NODE_ID;
     QMetaObject::invokeMethod(m_dbManager, "addTag", Qt::BlockingQueuedConnection, Q_RETURN_ARG(int, newTagId),
@@ -419,11 +427,80 @@ void AppBackend::addNewTag() {
     data[NodeItem::Roles::ItemType] = NodeItem::Type::TagItem;
     data[NodeItem::Roles::DisplayText] = tagName;
     data[NodeItem::Roles::NodeId] = newTagId;
-    data[NodeItem::Roles::TagColor] = QStringLiteral("#448ac9");
+    data[NodeItem::Roles::TagColor] = tagColor;
     data[NodeItem::Roles::RelPos] = 0;
     data[NodeItem::Roles::ChildCount] = 0;
 
     m_treeModel->appendChildNodeToParent(rootIdx, data);
+}
+
+void AppBackend::renameTreeItem(int itemType, int nodeId, const QString& newName) {
+    if (m_treeModel == nullptr || m_dbManager == nullptr || newName.trimmed().isEmpty()) {
+        return;
+    }
+
+    const auto type = static_cast<NodeItem::Type>(itemType);
+
+    if (type == NodeItem::FolderItem) {
+        QMetaObject::invokeMethod(m_dbManager, "renameNode", Qt::BlockingQueuedConnection, Q_ARG(int, nodeId),
+                                  Q_ARG(QString, newName.trimmed()));
+        NodeData folderNode;
+        QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
+                                  Q_RETURN_ARG(NodeData, folderNode), Q_ARG(int, nodeId));
+        const auto folderIndex = m_treeModel->folderIndexFromIdPath(folderNode.absolutePath());
+        if (folderIndex.isValid()) {
+            m_treeModel->setData(folderIndex, newName.trimmed(), NodeItem::Roles::DisplayText);
+        }
+    } else if (type == NodeItem::TagItem) {
+        QMetaObject::invokeMethod(m_dbManager, "renameTag", Qt::BlockingQueuedConnection, Q_ARG(int, nodeId),
+                                  Q_ARG(QString, newName.trimmed()));
+        const auto tagIndex = m_treeModel->tagIndexFromId(nodeId);
+        if (tagIndex.isValid()) {
+            m_treeModel->setData(tagIndex, newName.trimmed(), NodeItem::Roles::DisplayText);
+        }
+    }
+}
+
+void AppBackend::deleteFolderFromTree(int nodeId) {
+    if (m_treeModel == nullptr || m_dbManager == nullptr || nodeId <= DEFAULT_NOTES_FOLDER_ID) {
+        return;
+    }
+
+    NodeData folderNode;
+    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(NodeData, folderNode),
+                              Q_ARG(int, nodeId));
+    if (folderNode.id() == INVALID_NODE_ID) {
+        return;
+    }
+
+    const auto folderIndex = m_treeModel->folderIndexFromIdPath(folderNode.absolutePath());
+    if (!folderIndex.isValid()) {
+        return;
+    }
+
+    QMetaObject::invokeMethod(m_dbManager, "moveFolderToTrash", Qt::BlockingQueuedConnection,
+                              Q_ARG(NodeData, folderNode));
+
+    const auto parentIndex = m_treeModel->parent(folderIndex);
+    m_treeModel->deleteRow(folderIndex, parentIndex.isValid() ? parentIndex : m_treeModel->rootIndex());
+
+    // Reload current context and refresh tree counts
+    emit requestNodesTree();
+    reloadCurrentContext();
+}
+
+void AppBackend::deleteTagFromTree(int tagId) {
+    if (m_treeModel == nullptr || m_dbManager == nullptr) {
+        return;
+    }
+
+    const auto tagIndex = m_treeModel->tagIndexFromId(tagId);
+    if (!tagIndex.isValid()) {
+        return;
+    }
+
+    QMetaObject::invokeMethod(m_dbManager, "removeTag", Qt::BlockingQueuedConnection, Q_ARG(int, tagId));
+    m_treeModel->deleteRow(tagIndex, m_treeModel->rootIndex());
 }
 
 void AppBackend::moveCurrentNoteToTrash() {

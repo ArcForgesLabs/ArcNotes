@@ -94,6 +94,9 @@ public:
     Q_INVOKABLE void createNewNote();
     Q_INVOKABLE void addNewFolder();
     Q_INVOKABLE void addNewTag();
+    Q_INVOKABLE void renameTreeItem(int itemType, int nodeId, const QString& newName);
+    Q_INVOKABLE void deleteFolderFromTree(int nodeId);
+    Q_INVOKABLE void deleteTagFromTree(int tagId);
     Q_INVOKABLE void moveCurrentNoteToTrash();
     Q_INVOKABLE void restoreCurrentNote();
     Q_INVOKABLE void setCurrentNotePinned(bool isPinned);
