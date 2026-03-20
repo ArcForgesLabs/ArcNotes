@@ -143,51 +143,33 @@ if(GIT_REVISION)
   endif()
 endif()
 
-set(QRC_SOURCES ${PROJECT_SOURCE_DIR}/src/fonts.qrc
-                ${PROJECT_SOURCE_DIR}/src/images.qrc
-                ${PROJECT_SOURCE_DIR}/src/qmlmodulecompat.qrc)
+# ── Gather source files by extension ─────────────────────────────────
+file(GLOB_RECURSE SRC_HEADERS CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE SRC_SOURCES CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SRC_QRC CONFIGURE_DEPENDS
+     "${PROJECT_SOURCE_DIR}/src/*.qrc")
 
-qt_add_resources(QRC_GENERATED_SOURCES ${QRC_SOURCES})
+qt_add_resources(QRC_GENERATED_SOURCES ${SRC_QRC})
 
-set(SOURCES
-    ${PROJECT_SOURCE_DIR}/src/dbmanager.cpp
-    ${PROJECT_SOURCE_DIR}/src/dbmanager.h
-    ${PROJECT_SOURCE_DIR}/src/lqtutils_enum.h
-    ${PROJECT_SOURCE_DIR}/src/main.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodedata.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodedata.h
-    ${PROJECT_SOURCE_DIR}/src/nodepath.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodepath.h
-    ${PROJECT_SOURCE_DIR}/src/nodetreemodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/nodetreemodel.h
-    ${PROJECT_SOURCE_DIR}/src/notelistmodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/notelistmodel.h
-    ${PROJECT_SOURCE_DIR}/src/singleinstance.cpp
-    ${PROJECT_SOURCE_DIR}/src/singleinstance.h
-    ${PROJECT_SOURCE_DIR}/src/tagdata.cpp
-    ${PROJECT_SOURCE_DIR}/src/tagdata.h
-    ${PROJECT_SOURCE_DIR}/src/taglistmodel.cpp
-    ${PROJECT_SOURCE_DIR}/src/taglistmodel.h
-    ${PROJECT_SOURCE_DIR}/src/tagpool.cpp
-    ${PROJECT_SOURCE_DIR}/src/tagpool.h
-    ${PROJECT_SOURCE_DIR}/src/utils.h
-    ${QRC_GENERATED_SOURCES})
+# Files that were originally in 3rdParty — suppress warnings on them.
+set(SOURCES_3RD_PARTY
+    ${PROJECT_SOURCE_DIR}/src/markdownhighlighter.cpp
+    ${PROJECT_SOURCE_DIR}/src/qownlanguagedata.cpp)
 
-set(SOURCES_3RD_PARTY)
-list(APPEND SOURCES_3RD_PARTY
-     ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/markdownhighlighter.cpp
-     ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit/qownlanguagedata.cpp)
-set(QML_CXX_SOURCES
-    ${PROJECT_SOURCE_DIR}/src/appbackend.cpp
-    ${PROJECT_SOURCE_DIR}/src/appbackend.h
-    ${PROJECT_SOURCE_DIR}/src/custommarkdownhighlighter.cpp
-    ${PROJECT_SOURCE_DIR}/src/custommarkdownhighlighter.h
-    ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.cpp
-    ${PROJECT_SOURCE_DIR}/src/editorsettingsoptions.h
-    ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.cpp
-    ${PROJECT_SOURCE_DIR}/src/noteeditorbackend.h
-    ${PROJECT_SOURCE_DIR}/src/updatebackend.cpp
-    ${PROJECT_SOURCE_DIR}/src/updatebackend.h)
+# C++ sources that feed into qt_add_qml_module.
+set(QML_CXX_SOURCES)
+foreach(_f ${SRC_SOURCES} ${SRC_HEADERS})
+  get_filename_component(_name ${_f} NAME)
+  if(_name MATCHES "^(appbackend|custommarkdownhighlighter|editorsettingsoptions|noteeditorbackend|updatebackend)\\.(cpp|h)$")
+    list(APPEND QML_CXX_SOURCES ${_f})
+  endif()
+endforeach()
+
+# Everything else (excluding QML_CXX_SOURCES) goes into SOURCES.
+set(SOURCES ${SRC_SOURCES} ${SRC_HEADERS} ${QRC_GENERATED_SOURCES})
+list(REMOVE_ITEM SOURCES ${QML_CXX_SOURCES})
 
 set(UPDATE_CHECKER_DEFINE 0)
 if(UPDATE_CHECKER)
@@ -201,12 +183,9 @@ elseif(WIN32)
 endif()
 
 add_executable(${APP_TARGET} WIN32 MACOSX_BUNDLE ${SOURCES}
-                                                 ${SOURCES_3RD_PARTY}
-                                                 ${QML_CXX_SOURCES}
-                                                 )
+                                                 ${QML_CXX_SOURCES})
 
-target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src
-                                               ${PROJECT_SOURCE_DIR}/3rdParty/qmarkdowntextedit)
+target_include_directories(${APP_TARGET} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 target_compile_definitions(
   ${APP_TARGET}
@@ -254,32 +233,9 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
 endif()
 
 if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
-  set(QML_FILES
-      src/qml/AboutDialog.qml
-      src/qml/CheckBoxMaterial.qml
-      src/qml/CustomHorizontalScrollBar.qml
-      src/qml/CustomTextArea.qml
-      src/qml/CustomTextField.qml
-      src/qml/CustomVerticalScrollBar.qml
-      src/qml/EditorSettings.qml
-      src/qml/KanbanBoard.qml
-      src/qml/Main.qml
-      src/qml/FontChooserButton.qml
-      src/qml/FontIconLoader.qml
-      src/qml/FontIconsCodes.qml
-      src/qml/IconButton.qml
-      src/qml/OptionItemButton.qml
-      src/qml/SubscriptionStatus.qml
-      src/qml/SubscriptionWindow.qml
-      src/qml/SwitchButton.qml
-      src/qml/TextButton.qml
-      src/qml/ThemeChooserButton.qml
-      src/qml/TodoColumnDelegate.qml
-      src/qml/TodoTaskDelegate.qml
-      src/qml/UpdaterDialog.qml
-      src/qml/Utilities.js
-      src/qml/ViewChooserButton.qml
-      src/qml/kanbanMain.qml)
+  file(GLOB_RECURSE QML_FILES RELATIVE ${PROJECT_SOURCE_DIR} CONFIGURE_DEPENDS
+       "${PROJECT_SOURCE_DIR}/src/qml/*.qml"
+       "${PROJECT_SOURCE_DIR}/src/qml/*.js")
 
   set_source_files_properties(src/qml/SubscriptionStatus.qml
                               PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
@@ -287,9 +243,7 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
   foreach(file IN LISTS QML_FILES)
     get_filename_component(fileName ${file} NAME)
 
-    # This whole shenanigans is required to silence compiler warnings on files auto-generated by rcc.
-    # It isn't pretty, but unfortunately there's no nicer way to do this yet:
-    # https://discourse.cmake.org/t/qt-autogen-source-files-custom-compilation-flags/3002
+    # Silence compiler warnings on files auto-generated by rcc.
     string(REPLACE "." "_" file_qml_cpp ${fileName})
 
     if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES
@@ -306,8 +260,6 @@ if(QT_VERSION VERSION_GREATER_EQUAL 6.2)
   endforeach()
 
   # Silence an extra warning given by Clang:
-  # build/.rcc/qmlcache/Notes_qmlcache_loader.cpp#L46
-  # must specify at least one argument for '...' parameter of variadic macro [-Wgnu-zero-variadic-macro-arguments]
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set_source_files_properties(
       ${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${APP_TARGET}_qmlcache_loader.cpp

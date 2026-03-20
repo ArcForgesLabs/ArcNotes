@@ -48,7 +48,7 @@
 /**********************************************************/
 /* C/C++ Data *********************************************/
 /**********************************************************/
-void loadCppData(QMultiHash<char, QLatin1String> &typess,
+void loadCppData(QMultiHash<char, QLatin1String> &types,
                  QMultiHash<char, QLatin1String> &keywordss,
                  QMultiHash<char, QLatin1String> &builtins,
                  QMultiHash<char, QLatin1String> &literalss,

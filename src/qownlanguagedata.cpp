@@ -307,7 +307,7 @@ void initCppData() {
         {('p'), QLatin1String("pragma")},  {('P'), QLatin1String("_Pragma")},
         {('u'), QLatin1String("undef")},   {('w'), QLatin1String("warning")}};
 }
-void loadCppData(QMultiHash<char, QLatin1String> &typess,
+void loadCppData(QMultiHash<char, QLatin1String> &types,
                  QMultiHash<char, QLatin1String> &keywordss,
                  QMultiHash<char, QLatin1String> &builtins,
                  QMultiHash<char, QLatin1String> &literalss,
@@ -317,7 +317,7 @@ void loadCppData(QMultiHash<char, QLatin1String> &typess,
         cppDataInitialized = true;
     }
 
-    typess = cpp_types;
+    types = cpp_types;
     keywordss = cpp_keywords;
     builtins = cpp_builtin;
     literalss = cpp_literals;

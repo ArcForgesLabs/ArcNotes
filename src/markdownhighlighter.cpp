@@ -1233,7 +1233,7 @@ int MarkdownHighlighter::highlightNumericLiterals(const QString &text, int i) {
 
     bool isPostfixAllowed = false;
     if (i == text.length()) {
-        // cant have e at the end
+        // can't have e at the end
         if (isCurrentHex || text.at(i - 1) != QChar('e')) {
             isPostfixAllowed = true;
         }
