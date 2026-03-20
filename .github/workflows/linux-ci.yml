@@ -101,10 +101,8 @@ jobs:
       - name: Copy compile_commands.json for linting
         run: cp build/linux-ci/compile_commands.json build/compile_commands.json
 
-      - name: Generate AUTOGEN files for clang-tidy
-        run: |
-          cmake --build build/linux-ci --target arcnotes-app_autogen
-          cmake --build build/linux-ci --target arcnotes-tests_autogen
+      - name: Build (FASTBuild)
+        run: cmake --build --preset linux-ci
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -113,9 +111,6 @@ jobs:
 
       - name: Run pre-commit hooks
         uses: pre-commit/action@v3.0.1
-
-      - name: Build (FASTBuild)
-        run: cmake --build --preset linux-ci
 
       - name: Run tests
         run: ctest --test-dir build/linux-ci --output-on-failure
