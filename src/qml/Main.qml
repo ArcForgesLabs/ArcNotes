@@ -778,6 +778,16 @@ ApplicationWindow {
                                     color: root.accentColor
                                     horizontalAlignment: Text.AlignRight
                                     verticalAlignment: Text.AlignVCenter
+
+                                    TapHandler {
+                                        onTapped: {
+                                            if (treeDelegate.model.itemType === 3) {
+                                                Notes.AppBackend.addNewFolder()
+                                            } else if (treeDelegate.model.itemType === 4) {
+                                                Notes.AppBackend.addNewTag()
+                                            }
+                                        }
+                                    }
                                 }
                             }
 

@@ -358,6 +358,74 @@ void AppBackend::createNewNote() {
     selectNoteIndex(m_noteModel->getNoteIndex(m_noteEditor->currentEditingNoteId()));
 }
 
+void AppBackend::addNewFolder() {
+    if (m_treeModel == nullptr || m_dbManager == nullptr) {
+        return;
+    }
+
+    const QModelIndex rootIdx = m_treeModel->rootIndex();
+    const QString folderName = m_treeModel->getNewFolderPlaceholderName(rootIdx);
+
+    NodeData newFolder;
+    newFolder.setNodeType(NodeData::Type::Folder);
+    const auto currentDate = QDateTime::currentDateTime();
+    newFolder.setCreationDateTime(currentDate);
+    newFolder.setLastModificationDateTime(currentDate);
+    newFolder.setFullTitle(folderName);
+    newFolder.setParentId(ROOT_FOLDER_ID);
+
+    int newNodeId = INVALID_NODE_ID;
+    QMetaObject::invokeMethod(m_dbManager, "addNode", Qt::BlockingQueuedConnection, Q_RETURN_ARG(int, newNodeId),
+                              Q_ARG(NodeData, newFolder));
+    if (newNodeId <= 0) {
+        return;
+    }
+
+    NodeData createdFolder;
+    QMetaObject::invokeMethod(m_dbManager, "getNode", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(NodeData, createdFolder), Q_ARG(int, newNodeId));
+
+    QHash<NodeItem::Roles, QVariant> data;
+    data[NodeItem::Roles::ItemType] = NodeItem::Type::FolderItem;
+    data[NodeItem::Roles::DisplayText] = createdFolder.fullTitle();
+    data[NodeItem::Roles::NodeId] = createdFolder.id();
+    data[NodeItem::Roles::AbsPath] = createdFolder.absolutePath();
+    data[NodeItem::Roles::RelPos] = createdFolder.relativePosition();
+    data[NodeItem::Roles::ChildCount] = 0;
+
+    m_treeModel->appendChildNodeToParent(rootIdx, data);
+}
+
+void AppBackend::addNewTag() {
+    if (m_treeModel == nullptr || m_dbManager == nullptr) {
+        return;
+    }
+
+    const QString tagName = m_treeModel->getNewTagPlaceholderName();
+
+    TagData newTag;
+    newTag.setName(tagName);
+    newTag.setColor(QStringLiteral("#448ac9"));
+
+    int newTagId = INVALID_NODE_ID;
+    QMetaObject::invokeMethod(m_dbManager, "addTag", Qt::BlockingQueuedConnection, Q_RETURN_ARG(int, newTagId),
+                              Q_ARG(TagData, newTag));
+    if (newTagId <= 0) {
+        return;
+    }
+
+    const QModelIndex rootIdx = m_treeModel->rootIndex();
+    QHash<NodeItem::Roles, QVariant> data;
+    data[NodeItem::Roles::ItemType] = NodeItem::Type::TagItem;
+    data[NodeItem::Roles::DisplayText] = tagName;
+    data[NodeItem::Roles::NodeId] = newTagId;
+    data[NodeItem::Roles::TagColor] = QStringLiteral("#448ac9");
+    data[NodeItem::Roles::RelPos] = 0;
+    data[NodeItem::Roles::ChildCount] = 0;
+
+    m_treeModel->appendChildNodeToParent(rootIdx, data);
+}
+
 void AppBackend::moveCurrentNoteToTrash() {
     m_noteEditor->deleteCurrentNote();
 }

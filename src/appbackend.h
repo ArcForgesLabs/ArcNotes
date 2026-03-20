@@ -92,6 +92,8 @@ public:
     Q_INVOKABLE bool noteRowStartsPinnedSection(int row) const;
     Q_INVOKABLE bool noteRowStartsNotesSection(int row) const;
     Q_INVOKABLE void createNewNote();
+    Q_INVOKABLE void addNewFolder();
+    Q_INVOKABLE void addNewTag();
     Q_INVOKABLE void moveCurrentNoteToTrash();
     Q_INVOKABLE void restoreCurrentNote();
     Q_INVOKABLE void setCurrentNotePinned(bool isPinned);
